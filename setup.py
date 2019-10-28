@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="trivial_tools",
-    version="1",
+    version="2",
     author="Igor Zyktin",
     author_email="nicord@yandex.ru",
     description="Trivial tools for various scripts",

@@ -1,4 +1,4 @@
 # trivial_tools
 Trivial tools
 
-Набор примитивных инструментов для использования во множестве программ 
+Set of primitive tools, used in various programs. 

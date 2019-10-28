@@ -5,7 +5,7 @@
 
 """
 # модули проекта
-from trivial_tools.files import json_config_load
+from trivial_tools.files.json import json_config_load
 
 
 class BaseConfig:

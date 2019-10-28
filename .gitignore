@@ -16,9 +16,6 @@ __pycache__/
 dmypy.json
 
 # build
-build
-dist
-trivial_tools.egg-info
 /dist/
 /venv/
 /trivial_tools.egg-info/

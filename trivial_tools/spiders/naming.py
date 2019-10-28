@@ -6,7 +6,7 @@
 """
 # встроенные модули
 import re
-from contextlib import suppress
+from contextlib import suppress as _suppress
 
 # шаблон имени паука
 from datetime import date
@@ -31,7 +31,7 @@ def spider_sorter(key: str) -> int:
     """
     result = -1
     if isinstance(key, str) and len(key) == 8:
-        with suppress:
+        with _suppress(ValueError):
             result = int(key[3:])
     return result
 
@@ -79,3 +79,11 @@ def spider_id_from_spider_csv(filename: str, pattern: re.Pattern = CSV_ID_PATTER
         spider_id = spider_id.group(1)
         return spider_id
     return None
+
+
+def has_csv_date(string: str, pattern: re.Pattern = CSV_DATE_PATTERN) -> bool:
+    """
+    Проверить, похоже ли это на CSV файл паука с датой
+    """
+    result = pattern.match(string)
+    return bool(result)

@@ -1,0 +1,15 @@
+/venv/
+/.idea
+/.pytest_cache
+__pycache__/
+*.py[cod]
+*.manifest
+*.spec
+.coverage
+*.log
+.env
+.venv
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json

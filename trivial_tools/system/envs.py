@@ -38,7 +38,7 @@ def get_path_from_env(key: str) -> str:
     return path
 
 
-def get_full_path(key: str, *args: str) -> str:
+def get_full_path(key: str, *args: str, auto_create: bool = True) -> str:
     """
     Получить путь к каталогу по ключу переменной среды
     При наличии суффикса мы добавляем его в путь как подкаталог
@@ -46,4 +46,11 @@ def get_full_path(key: str, *args: str) -> str:
     path = get_path_from_env(key)
     if args:
         path = os.path.join(path, *args)
+
+        if not os.path.exists(path) and auto_create:
+            new_path = path
+            for arg in args:
+                new_path = os.path.join(new_path, arg)
+                os.mkdir(new_path)
+
     return path

@@ -5,7 +5,7 @@
 
 """
 # встроенные модули
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional, Any
 
 
 def method(container: Dict[str, Callable]) -> Callable:
@@ -19,3 +19,16 @@ def method(container: Dict[str, Callable]) -> Callable:
         container[func.__name__] = func
         return func
     return wrapper
+
+
+def form_request(method_name: str, request_id: Optional[int] = None, **kwargs) -> Dict[str, Any]:
+    """
+    Собрать запрос к API
+    """
+    request = {
+        "jsonrpc": "2.0",
+        "method": method_name,
+        "params": {**kwargs},
+        "id": request_id
+    }
+    return request

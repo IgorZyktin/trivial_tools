@@ -9,12 +9,15 @@ import time
 from functools import wraps
 from typing import Callable, Union, Tuple, Any
 
+# сторонние модули
+from loguru import logger
+
 # модули проекта
-from special.special import fail
+from trivial_tools.special.special import fail
 
 
 def repeat_on_exceptions(repeats: int, case: Union[Exception, Tuple[Exception]],
-                         delay: float = 1.0) -> Callable:
+                         delay: float = 1.0, verbose: bool = True) -> Callable:
     """Декоратор, заставляющий функцию повторить операцию при выбросе исключения.
 
     Инструмент добавлен для возможности повторной отправки HTTP запросов на серверах
@@ -40,6 +43,10 @@ def repeat_on_exceptions(repeats: int, case: Union[Exception, Tuple[Exception]],
                     break
                 except case as exc:
                     iteration += 1
+
+                    if verbose:
+                        logger.warning(f'Исключение {type(exc)} в функции {func.__name__}'
+                                        f' (итерация {iteration})')
 
                     if repeats and iteration > repeats:
                         fail(exc)

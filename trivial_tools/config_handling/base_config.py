@@ -19,6 +19,21 @@ class BaseConfig:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+    def to_dict(self) -> dict:
+        """
+        Преобразовать в словарь
+        """
+        result = {key: value for key, value in self.__dict__.items()}
+        return result
+
+    def alter(self, **kwargs):
+        """
+        Получить аналогичный конфиг, но с другими параметрами
+        """
+        values = {**self.to_dict(), **kwargs}
+        result = type(self)(**values)
+        return result
+
     @classmethod
     def from_json(cls, file_name: str, config_name: str):
         """

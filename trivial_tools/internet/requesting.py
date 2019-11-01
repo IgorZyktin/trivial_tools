@@ -11,19 +11,30 @@ from typing import Dict, Any, Optional
 import requests
 from loguru import logger
 
+# модули проекта
+from trivial_tools.runners.base import repeat_on_exceptions
+
 
 def make_post(url: str, json: dict) -> Optional[Dict[str, Any]]:
     """
     Выполнить POST запрос и получить данные
     """
     response = requests.post(url, json=json)
-    result = response.json()
-
-    if 'error' in result:
+    if response.status_code == 200:
+        result = response.json()
+    else:
         logger.critical('Критический сбой!')
-        logger.critical(result)
+        logger.critical(response.content)
         result = None
     # else:
     #     result = result.get('result')
 
     return result
+
+
+@repeat_on_exceptions(repeats=0, case=requests.ConnectionError, delay=1.0)
+def make_safe_post(url: str, json: dict) -> Optional[Dict[str, Any]]:
+    """
+    Безопасный вариант POST запроса
+    """
+    return make_post(url, json)

@@ -8,7 +8,7 @@
 from typing import NoReturn, Optional
 
 # модули проекта
-from formatters.base import decorate
+from trivial_tools.formatters.base import decorate
 
 
 def fail(message: str, reason: Exception = RuntimeError,
@@ -33,6 +33,6 @@ def fail(message: str, reason: Exception = RuntimeError,
     # выбрасываем из класса исключений
     name = reason.__name__
 
-    # В настоящий момент (python 3.7) нет способа корректо указать исключения в аннотациях типов.
+    # В настоящий момент (python 3.7) нет способа корректно указать исключения в аннотациях типов.
     # noinspection PyCallingNonCallable
     raise reason(decorate(f'{name}: {message}'))

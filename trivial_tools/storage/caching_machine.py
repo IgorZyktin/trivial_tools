@@ -8,7 +8,7 @@
 from typing import Any, Dict, Optional
 
 # модули проекта
-from storage.caching_instance import CachingInstance
+from trivial_tools.storage.caching_instance import CachingInstance
 
 
 class CachingMachine:
@@ -28,7 +28,7 @@ class CachingMachine:
         """
         return self._cache[item]
 
-    def extract(self, key: str) -> Optional[Any]:
+    def extract(self, key: Any) -> Optional[Any]:
         """
         Общая функция извлечения значения. В отличии от редиса,
         мы можем хранить какие попало значения, поэтому в итоге всё сводится к
@@ -42,7 +42,7 @@ class CachingMachine:
                 self.delete(key)
         return None
 
-    def assign(self, key: str, value: Any, expires: Optional[int]) -> bool:
+    def assign(self, key: Any, value: Any, expires: Optional[int]=None) -> bool:
         """
         Общая функция установки значения. В отличии от редиса,
         мы можем хранить какие попало значения, поэтому в итоге всё сводится к

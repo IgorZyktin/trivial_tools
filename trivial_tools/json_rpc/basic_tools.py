@@ -32,3 +32,11 @@ def form_request(method_name: str, request_id: Optional[int] = None, **kwargs) -
         "id": request_id
     }
     return request
+
+
+def form_valid_response(result: Any, request_id: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Собрать ответ из API
+    """
+    response = {"jsonrpc": "2.0", "result": result, "id": request_id}
+    return response

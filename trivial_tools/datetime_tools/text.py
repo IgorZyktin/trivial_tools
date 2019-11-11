@@ -6,8 +6,8 @@
 """
 # встроенные модули
 import time
-from typing import Optional
 from datetime import date, datetime
+from typing import Optional, Sequence, List
 
 
 def parse_date(string: Optional[str]) -> Optional[date]:
@@ -17,6 +17,18 @@ def parse_date(string: Optional[str]) -> Optional[date]:
     if string is not None:
         return datetime.strptime(string, '%Y-%m-%d').date()
     return None
+
+
+def parse_dates(container: Sequence) -> List[date]:
+    """
+    Распарсить множество дат
+    """
+    result = []
+    for each in container:
+        new_date = parse_date(each)
+        if new_date is not None:
+            result.append(new_date)
+    return sorted(result)
 
 
 def cur_time(format_string: str = '%H:%M:%S') -> str:

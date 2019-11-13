@@ -7,7 +7,10 @@
 # встроенные модули
 import time
 from datetime import date, datetime
-from typing import Optional, Sequence, List
+from typing import Optional, Sequence, List, Union
+
+# модули проекта
+from trivial_tools.calculations.base_math import math_round
 
 
 def parse_date(string: Optional[str]) -> Optional[date]:
@@ -76,5 +79,36 @@ def datetime_to_text_ms(moment: datetime, format_string: str = "%Y-%m-%d %H:%M:%
     """
     Преобразовать время в виде datetime в текстовую форму
     """
-    result = datetime_to_text(moment, "%Y-%m-%d %H:%M:%S.%f")
+    result = datetime_to_text(moment, format_string)
+    return result
+
+
+def sep(number: Union[int, float, str], precision: int = 2) -> str:
+    """
+    Вывести число с разделением на разряды
+
+    >>> sep('12345678')
+    '12345678'
+
+    >>> sep(12345678)
+    '12 345 678'
+
+    >>> sep(1234.5678)
+    '1 234.57'
+
+    >>> sep(1234.5678, precision=4)
+    '1 234.5678'
+    """
+    if isinstance(number, int):
+        result = '{:,}'.format(number).replace(',', ' ')
+
+    elif isinstance(number, float):
+        result = '{:,}'.format(math_round(number, precision)).replace(',', ' ')
+        if '.' in result:
+            tail = result.rsplit('.')[-1]
+            result += '0' * (precision - len(tail))
+
+    else:
+        result = str(number)
+
     return result

@@ -10,25 +10,42 @@ from datetime import date, datetime
 from typing import Optional, Sequence, List
 
 
-def parse_date(string: Optional[str]) -> Optional[date]:
+def parse_date(string: Optional[str], pattern: str = '%Y-%m-%d') -> Optional[date]:
     """
     Обработка даты (при возможности)
     """
     if string:
-        return datetime.strptime(string, '%Y-%m-%d').date()
+        return datetime.strptime(string, pattern).date()
     return None
 
 
-def parse_dates(container: Sequence) -> List[date]:
+def parse_dates(container: Sequence, pattern: str = '%Y-%m-%d') -> List[date]:
     """
     Распарсить множество дат
     """
     result = []
     for each in container:
-        new_date = parse_date(each)
+        new_date = parse_date(each, pattern)
         if new_date is not None:
             result.append(new_date)
     return sorted(result)
+
+
+def parse_datetime(string: Optional[str], pattern: str = '%Y-%m-%d %H:%M:%S') -> Optional[date]:
+    """
+    Обработка даты+время (при возможности)
+    """
+    if string:
+        return datetime.strptime(string, pattern)
+    return None
+
+
+def parse_datetime_ms(string: Optional[str],
+                      pattern: str = '%Y-%m-%d %H:%M:%S.%f') -> Optional[date]:
+    """
+    Обработка даты+время (при возможности)
+    """
+    return parse_datetime(string, pattern)
 
 
 def cur_time(format_string: str = '%H:%M:%S') -> str:

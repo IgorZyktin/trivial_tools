@@ -5,6 +5,8 @@
 
 """
 # модули проекта
+from typing import Optional
+
 from trivial_tools.files.json import json_config_load
 
 
@@ -35,11 +37,11 @@ class BaseConfig:
         return result
 
     @classmethod
-    def from_json(cls, file_name: str, config_name: str):
+    def from_json(cls, filename: str, config_name: str, default_config: Optional[str] = None):
         """
         Загрузить настройки из json файла
         """
-        parameters = json_config_load(file_name, config_name)
+        parameters = json_config_load(filename, config_name, default_config)
         instance = cls(**parameters)
         return instance
 

@@ -14,7 +14,7 @@ def parse_date(string: Optional[str]) -> Optional[date]:
     """
     Обработка даты (при возможности)
     """
-    if string is not None:
+    if string:
         return datetime.strptime(string, '%Y-%m-%d').date()
     return None
 

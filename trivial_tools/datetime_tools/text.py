@@ -72,7 +72,7 @@ def datetime_to_text(moment: datetime, format_string: str = "%Y-%m-%d %H:%M:%S")
     return result
 
 
-def datetime_to_text_ms(moment: datetime, format_string: str = "%Y-%m-%d %H:%M:%S") -> str:
+def datetime_to_text_ms(moment: datetime, format_string: str = "%Y-%m-%d %H:%M:%S.%f") -> str:
     """
     Преобразовать время в виде datetime в текстовую форму
     """

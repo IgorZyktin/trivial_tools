@@ -87,24 +87,25 @@ def start_working(folder_name: str, config_name: Optional[str], func: Callable,
 
     logger.add(
         sink=get_full_path_from_env(config.db_path, config.logger_filename),
+        level=config.logger_level,
         rotation=config.logger_rotation
     )
 
     separator = '#' * 79
 
-    logger.info(separator)
-    logger.info(config.start_message)
+    logger.warning(separator)
+    logger.warning(config.start_message)
     logger.info(f'Параметры скрипта:\n{config}')
 
     while True:
         # noinspection PyBroadException
         try:
             message = func(config)
-            logger.info(message)
+            logger.warning(message)
         except Exception:
             logger.exception('\nКритический сбой!')
 
         if not infinite:
             break
 
-    logger.info(separator)
+    logger.warning(separator)

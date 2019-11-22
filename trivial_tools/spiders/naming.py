@@ -22,6 +22,36 @@ CSV_DATE_PATTERN = re.compile(r'\d{2}-\d{5}_(\d{4})-(\d{2})-(\d{2}).csv$')
 CSV_ID_PATTERN = re.compile(r'(\d{2}-\d{5})_\d{4}-\d{2}-\d{2}.csv$')
 
 
+def spider_id_to_int(spider_id: str, pattern=re.compile(r'(\d{2})-(\d{5})')) -> int:
+    """
+    Конвертировать spider_id в числовое представление
+
+    >>> spider_id_to_int('02-00241')
+    200241
+
+    >>> spider_id_to_int('99-99999')
+    9999999
+    """
+    group, number = pattern.match(spider_id).groups()
+    result = int(group) * 100_000 + int(number)
+    return result
+
+
+def spider_id_to_str(spider_iid: int) -> str:
+    """
+    Конвертировать spider_id из числового представления в строковое
+
+    >>> spider_id_to_str(200241)
+    '02-00241'
+
+    >>> spider_id_to_str(9999999)
+    '99-99999'
+    """
+    group, number = divmod(spider_iid, 100_000)
+    result = f'{group:02d}-{number:05d}'
+    return result
+
+
 def spider_sorter(key: str) -> int:
     """
     Ключевая функция для сортировки пауков. Сортирует по номеру паука без учёта серии
@@ -36,7 +66,7 @@ def spider_sorter(key: str) -> int:
     return result
 
 
-def is_spider_id(string: str, pattern: re.Pattern = SPIDER_ID_PATTERN) -> bool:
+def is_spider_id(string: str, pattern=SPIDER_ID_PATTERN) -> bool:
     """
     Проверить, является ли строка валидным id паука
 
@@ -49,7 +79,7 @@ def is_spider_id(string: str, pattern: re.Pattern = SPIDER_ID_PATTERN) -> bool:
     return result
 
 
-def date_from_spider_csv(filename: str, pattern: re.Pattern = CSV_DATE_PATTERN) -> Optional[date]:
+def date_from_spider_csv(filename: str, pattern=CSV_DATE_PATTERN) -> Optional[date]:
     """
     Извлечь дату из имени CSV файла паука
 
@@ -64,7 +94,7 @@ def date_from_spider_csv(filename: str, pattern: re.Pattern = CSV_DATE_PATTERN) 
     return None
 
 
-def spider_id_from_spider_csv(filename: str, pattern: re.Pattern = CSV_ID_PATTERN) -> Optional[str]:
+def spider_id_from_spider_csv(filename: str, pattern=CSV_ID_PATTERN) -> Optional[str]:
     """
     Извлечь id паука из имени файла
 
@@ -81,7 +111,7 @@ def spider_id_from_spider_csv(filename: str, pattern: re.Pattern = CSV_ID_PATTER
     return None
 
 
-def has_csv_date(string: str, pattern: re.Pattern = CSV_DATE_PATTERN) -> bool:
+def has_csv_date(string: str, pattern=CSV_DATE_PATTERN) -> bool:
     """
     Проверить, похоже ли это на CSV файл паука с датой
     """

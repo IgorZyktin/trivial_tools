@@ -43,6 +43,10 @@ class Carousel:
                  maxlen: int = 0, sentinel: Any = object()):
         """
         Создание экземпляра. Можно задать базовую коллекцию, размер и объект для пустых слотов
+
+        :param source:
+        :param maxlen:
+        :param sentinel:
         """
         self._sentinel = sentinel
         self._data = []
@@ -91,6 +95,8 @@ class Carousel:
     def populate(self, source: Sequence[Any]) -> None:
         """
         Наполнить хранилище предоставленными данными
+
+        :param source: некоторая коллекция, элементы которой надо последовательно переложить
         """
         self._index = 0
         for value in source:
@@ -118,6 +124,9 @@ class Carousel:
 
         Мы замещаем элемент, выталкивая его из списка и возвращаем его. Его значение потом может
         быть использовано на вызывающей стороне
+
+        :param element: Новый элемент любого типа
+        :return: Старый элемент, который был вытолкнут при добавлении (может оказаться sentinel!)
         """
         old_value = self._data[self._index]
         self._data[self._index] = element
@@ -129,9 +138,11 @@ class Carousel:
 
         return old_value
 
-    def resize(self, new_maxlen: int):
+    def resize(self, new_maxlen: int) -> None:
         """
         Изменить размер карусели
+
+        :param new_maxlen: новая предельная длина для внутреннего хранилища
         """
         if new_maxlen == self.maxlen:
             return
@@ -167,7 +178,7 @@ class Carousel:
 
     def _internals(self) -> Generator[Any, None, None]:
         """
-        Извлечь внутреннее хранилище вместе с пустыми объектами
+        Проитерироваться по элементам внутреннего хранилища (включая пустые элементы!)
         """
         if len(self) == self.maxlen:
             yield from self._data[self._index:]
@@ -175,9 +186,10 @@ class Carousel:
         else:
             yield from self._data
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         """
-        Выдаём внутренние элементы согласно порядку добавления
+        Проитерироваться по элементам внутреннего хранилища (без пустых элементов)
+        Сохраняет порядок вставки элементов
         """
         for element in self._internals():
             if element is not self._sentinel:

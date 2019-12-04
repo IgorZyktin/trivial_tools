@@ -28,8 +28,8 @@
 from typing import Any, Optional, Sequence, List, Generator
 
 # модули проекта
-from special.special import fail
-from formatters.base import s_type
+from trivial_tools.special.special import fail
+from trivial_tools.formatters.base import s_type
 
 
 class Carousel:

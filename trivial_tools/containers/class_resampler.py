@@ -23,8 +23,8 @@ from datetime import timedelta
 from typing import Generator, Any
 
 # модули проекта
-from formatters.base import s_type
-from datetime_tools.text import datetime_to_text
+from trivial_tools.formatters.base import s_type
+from trivial_tools.datetime_tools.text import datetime_to_text
 
 
 class Resampler:

@@ -16,10 +16,10 @@
 
 """
 # встроенные модули
-from typing import Union
+from typing import Union, Optional, Sequence, Any
 
 # модули проекта
-from containers.class_carousel import Carousel
+from trivial_tools.containers.class_carousel import Carousel
 
 
 class MovingAverage(Carousel):
@@ -29,13 +29,14 @@ class MovingAverage(Carousel):
     """
     __slots__ = ('_sum', '_avg')
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, source: Optional[Sequence] = None,
+                 maxlen: int = 0, sentinel: Any = object()):
         """
         Создание экземпляра
         """
         self._sum = 0.0
         self._avg = 0.0
-        super().__init__(*args, **kwargs)
+        super().__init__(source, maxlen, sentinel)
 
     def push(self, value: Union[int, float]) -> None:
         """

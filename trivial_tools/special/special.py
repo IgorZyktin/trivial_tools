@@ -5,13 +5,13 @@
 
 """
 # встроенные модули
-from typing import NoReturn, Optional
+from typing import NoReturn, Optional, Type
 
 # модули проекта
 from trivial_tools.formatters.base import decorate
 
 
-def fail(message: str, reason: Exception = RuntimeError,
+def fail(message: str, reason: Type[Exception] = RuntimeError,
          raise_from: Optional[Exception] = None) -> NoReturn:
     """Выбросить исключение с заданным текстовым сообщением
 

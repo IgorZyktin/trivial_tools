@@ -5,7 +5,7 @@
 
 """
 # встроенные модули
-from typing import Any, Sequence
+from typing import Any, Sequence, Union
 
 
 def decorate(message: str, symbol: str = '+', line_width: int = 79) -> str:

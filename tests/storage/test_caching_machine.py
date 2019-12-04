@@ -65,5 +65,5 @@ def test_fill(machine_tiny):
         machine_tiny.set('key_5', 'value')
         assert machine_tiny.total() == 4
 
-        machine_tiny.clear()
+        machine_tiny.restore()
         assert machine_tiny.total() == 0

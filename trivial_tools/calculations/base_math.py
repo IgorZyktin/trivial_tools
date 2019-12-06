@@ -8,6 +8,13 @@
 import math
 from typing import Union
 
+SUFFIXES = {
+    'RU': {'B': 'Б', 'kB': 'кБ', 'MB': 'МБ', 'GB': 'ГБ', 'TB': 'ТБ', 'PB': 'ПБ', 'EB': 'ЭБ',
+           'KiB': 'КиБ', 'MiB': 'МиБ', 'GiB': 'ГиБ', 'TiB': 'ТиБ', 'PiB': 'ПиБ', 'EiB': 'ЭиБ'},
+    'EN': {'B': 'B', 'kB': 'kB', 'MB': 'MB', 'GB': 'GB', 'TB': 'TB', 'PB': 'PB', 'EB': 'EB',
+           'KiB': 'KiB', 'MiB': 'MiB', 'GiB': 'GiB', 'TiB': 'TiB', 'PiB': 'PiB', 'EiB': 'EiB'},
+}
+
 
 def math_round(number: float, decimals: int = 0) -> float:
     """Округлить математическиим (не банковским) способом.
@@ -62,3 +69,85 @@ def sep_digits(number: Union[int, float, str], precision: int = 2) -> str:
         result = str(number)
 
     return result
+
+
+def byte_count_to_si(total_bytes: int, lang: str = 'RU') -> str:
+    """
+    Перевести число байт в укороченную форму согласно системы СИ, по основанию 1000
+
+    :param total_bytes: целое число байт
+    :param lang: язык, на котором должен быть написан суффикс
+    :return: текстовое представление величины
+
+    >>> byte_count_to_si(1023)
+    '1.0 kB'
+    """
+    prefix = ''
+    if total_bytes < 0:
+        prefix = '-'
+        total_bytes = abs(total_bytes)
+
+    if total_bytes < 1000:
+        return f'{prefix}{total_bytes} ' + SUFFIXES[lang]['B']
+
+    if total_bytes < 999_950:
+        return f'{prefix}{total_bytes / 1000:0.1f} ' + SUFFIXES[lang]['kB']
+
+    total_bytes /= 1000
+
+    if total_bytes < 999_950:
+        return f'{prefix}{total_bytes / 1000 :0.1f} ' + SUFFIXES[lang]['MB']
+
+    total_bytes /= 1000
+
+    if total_bytes < 999_950:
+        return f'{prefix}{total_bytes / 1000 :0.1f} ' + SUFFIXES[lang]['GB']
+
+    total_bytes /= 1000
+
+    if total_bytes < 999_950:
+        return f'{prefix}{total_bytes / 1000 :0.1f} ' + SUFFIXES[lang]['TB']
+
+    return f'{prefix}{total_bytes / 1_000_000_000 :0.1f} ' + SUFFIXES[lang]['EB']
+
+
+def byte_count_to_text(total_bytes: int, lang: str = 'RU') -> str:
+    """
+    Перевести число байт в укороченную форму по основанию 1024
+
+    :param total_bytes: целое число байт
+    :param lang: язык, на котором должен быть написан суффикс
+    :return: текстовое представление величины
+
+    >>> byte_count_to_text(1023)
+    '1023 B'
+    """
+    prefix = ''
+    if total_bytes < 0:
+        prefix = '-'
+        total_bytes = abs(total_bytes)
+
+    if total_bytes < 1024:
+        return f'{prefix}{total_bytes} ' + SUFFIXES[lang]['B']
+
+    total_bytes /= 1024
+
+    if total_bytes < 1024:
+        return f'{prefix}{total_bytes:0.1f} ' + SUFFIXES[lang]['KiB']
+
+    total_bytes /= 1024
+
+    if total_bytes < 1024:
+        return f'{prefix}{total_bytes:0.1f} ' + SUFFIXES[lang]['MiB']
+
+    total_bytes /= 1024
+
+    if total_bytes < 1024:
+        return f'{prefix}{total_bytes:0.1f} ' + SUFFIXES[lang]['GiB']
+
+    total_bytes /= 1024
+
+    if total_bytes < 1024:
+        return f'{prefix}{total_bytes:0.1f} ' + SUFFIXES[lang]['TiB']
+
+    return f'{total_bytes / 1024 / 1024 :0.1f} ' + SUFFIXES[lang]['EiB']

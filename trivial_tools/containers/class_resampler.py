@@ -14,7 +14,8 @@
         [datetime(2019, 12, 1, 12, 0, 0), 'A'],
         [datetime(2019, 12, 1, 12, 0, 1), 'A'],
         [datetime(2019, 12, 1, 12, 0, 2), 'A'],
-        [datetime(2019, 12, 1, 12, 0, 3), 'A']
+        [datetime(2019, 12, 1, 12, 0, 3), 'A'],
+        [datetime(2019, 12, 1, 12, 0, 4), 'B']
     ]
 
 """
@@ -33,7 +34,7 @@ class Resampler:
     Создаётся по одному экземпляру на источник данных
     Сами данные не хранит, работает по двум меткам времени
     """
-    __slots__ = ('max_gap', 'datetime_index', 'previous', 'placeholder')
+    __slots__ = ('max_gap', 'datetime_index', 'previous', 'placeholder', '_full_on')
 
     def __init__(self, max_gap: int = 30, datetime_index: int = 0, placeholder: Any = None):
         """
@@ -46,11 +47,14 @@ class Resampler:
         соответственно datetime_index это индекс в этом кортеже,
         по которому можно найти метку времени.
         :param placeholder: заполнитель для случая, когда у нас не нашлось значения для подстановки
+        :param _full_on: флаг, показывающий, что ресемплер вошёл в рабочий режим. Без него
+        будет съедено первое значение в списке
         """
         self.max_gap = max_gap
         self.datetime_index = datetime_index
         self.placeholder = placeholder
         self.previous = None
+        self._full_on = False
 
     def __repr__(self) -> str:
         """
@@ -120,13 +124,18 @@ class Resampler:
             # вытаскиваем значения (идут после индекса времени)
             body = list(self.previous)
 
-        # генерируем серию промежуточных значений
-        yield list(self.previous)
+        # первое значение в списке требует особого отношения
+        if not self._full_on:
+            yield self.previous
+            self._full_on = True
 
+        # генерируем серию промежуточных значений
         for i in range(1, delta):
             moment = old_moment + timedelta(seconds=i)
             body[self.datetime_index] = moment
             yield list(body)
+
+        yield payload
 
         self.previous = payload
 
@@ -153,3 +162,4 @@ class Resampler:
         Сбросить в исходное состояние
         """
         self.previous = None
+        self._full_on = False

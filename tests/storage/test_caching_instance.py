@@ -27,7 +27,7 @@ def test_expiration():
     """
     Проверка протухания экземпляра
     """
-    with patch('storage.caching_instance.datetime') as fake:
+    with patch('trivial_tools.storage.caching_instance.datetime') as fake:
         fake.now.return_value = datetime(2019, 10, 31, 18, 6, 0)
         inst = CachingInstance(123, 5)
         assert inst.value == 123
@@ -35,14 +35,14 @@ def test_expiration():
         assert inst.not_expired()
         assert not inst.expired()
 
-    with patch('storage.caching_instance.datetime') as fake:
+    with patch('trivial_tools.storage.caching_instance.datetime') as fake:
         fake.now.return_value = datetime(2019, 10, 31, 18, 6, 4)
         assert inst.value == 123
         assert inst.expires == datetime(2019, 10, 31, 18, 6, 5)
         assert inst.not_expired()
         assert not inst.expired()
 
-    with patch('storage.caching_instance.datetime') as fake:
+    with patch('trivial_tools.storage.caching_instance.datetime') as fake:
         fake.now.return_value = datetime(2019, 10, 31, 18, 6, 5)
         assert inst.value == 123
         assert inst.expires == datetime(2019, 10, 31, 18, 6, 5)
@@ -57,7 +57,7 @@ def test_repr():
     inst = CachingInstance(123)
     assert str(inst) == 'CachingInstance(value=123, expires=None)'
 
-    with patch('storage.caching_instance.datetime') as fake:
+    with patch('trivial_tools.storage.caching_instance.datetime') as fake:
         fake.now.return_value = datetime(2019, 10, 31, 18, 6, 5)
         inst = CachingInstance(345, 56)
         assert str(inst) == ('CachingInstance(value=345, '

@@ -43,7 +43,7 @@ def test_fill(machine_tiny):
     """
     Проверка заполнения машины
     """
-    with patch('storage.caching_instance.datetime') as fake:
+    with patch('trivial_tools.storage.caching_instance.datetime') as fake:
         fake.now.return_value = datetime(2019, 10, 31, 18, 6, 0)
         assert machine_tiny.total() == 0
 
@@ -65,5 +65,5 @@ def test_fill(machine_tiny):
         machine_tiny.set('key_5', 'value')
         assert machine_tiny.total() == 4
 
-        machine_tiny.restore()
+        machine_tiny.clear()
         assert machine_tiny.total() == 0

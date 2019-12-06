@@ -12,7 +12,7 @@ from unittest.mock import patch
 import pytest
 
 # модули проекта
-from storage.caching_machine import CachingMachine
+from trivial_tools.storage.caching_machine import CachingMachine
 
 
 @pytest.fixture()

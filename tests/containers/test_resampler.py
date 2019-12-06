@@ -11,7 +11,7 @@ from datetime import datetime
 import pytest
 
 # модули проекта
-from containers.class_resampler import Resampler
+from trivial_tools.containers.class_resampler import Resampler
 
 
 @pytest.fixture()

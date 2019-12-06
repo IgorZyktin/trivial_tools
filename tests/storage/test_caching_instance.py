@@ -9,7 +9,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 # модули проекта
-from storage.caching_instance import CachingInstance
+from trivial_tools.storage.caching_instance import CachingInstance
 
 
 def test_expiration_persistent():

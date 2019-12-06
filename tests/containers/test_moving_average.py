@@ -9,7 +9,7 @@ import pytest
 from pytest import approx
 
 # модули проекта
-from containers.class_moving_average import MovingAverage
+from trivial_tools.containers.class_moving_average import MovingAverage
 
 
 @pytest.fixture()

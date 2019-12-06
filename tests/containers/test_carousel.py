@@ -8,7 +8,7 @@
 import pytest
 
 # модули проекта
-from containers.class_carousel import Carousel
+from trivial_tools.containers.class_carousel import Carousel
 
 
 def test_creation():

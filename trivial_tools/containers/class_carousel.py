@@ -25,7 +25,7 @@
 
 """
 # встроенные модули
-from typing import Any, Optional, Sequence, List, Generator
+from typing import Any, Optional, Sequence, List, Generator, Union
 
 # модули проекта
 from trivial_tools.special.special import fail
@@ -194,3 +194,49 @@ class Carousel:
         for element in self._internals():
             if element is not self._sentinel:
                 yield element
+
+    def __getitem__(self, item: Union[int, slice]) -> Any:
+        """
+        Обратиться к элементу по индексу.
+        Обеспечивается обычный доступ к внутреннему хранилищу, просто со смещением индекса
+
+        :param item: ключ индексации
+        :return: содержимое внутреннего хранилища
+        """
+        if isinstance(item, int):
+            return self._data[self._index + item]
+
+        if isinstance(item, slice):
+            start = item.start + self._index if item.start else None
+            stop = item.stop + self._index if item.stop else None
+            step = item.step + self._index if item.step else None
+            return self._data[slice(start, stop, step)]
+
+        fail(
+            f"Тип {s_type(self)} поддерживает работу только с индексами int и slice!",
+            reason=IndexError
+        )
+
+    def __setitem__(self, key: Union[int, slice], value: Any) -> None:
+        """
+        Записать элемент по индексу.
+        Обеспечивается обычный доступ к внутреннему хранилищу, просто со смещением индекса
+
+        :param key: ключ индексации
+        :param value: данные для записи (любой тип)
+        """
+        if isinstance(key, int):
+            self._data[self._index + key] = value
+            return
+
+        if isinstance(key, slice):
+            start = key.start + self._index if key.start else None
+            stop = key.stop + self._index if key.stop else None
+            step = key.step + self._index if key.step else None
+            self._data[slice(start, stop, step)] = value
+            return
+
+        fail(
+            f"Тип {s_type(self)} поддерживает работу только с индексами int и slice!",
+            reason=IndexError
+        )

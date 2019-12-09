@@ -77,3 +77,30 @@ class MovingAverage(Carousel):
         Среднее всех элементов
         """
         return self._avg
+
+    def __setitem__(self, key: Union[int, slice], value: Union[int, float, Sequence]) -> Any:
+        """
+        Записать элемент по индексу.
+        Обеспечивается обычный доступ к внутреннему хранилищу, просто со смещением индекса
+
+        :param key: ключ индексации
+        :param value: данные для записи (любой тип)
+        """
+        if isinstance(key, int):
+            self._sum -= self._data[self._index + key]
+            self._sum += value
+            self._avg = self._sum / len(self)
+            self._data[self._index + key] = value
+            return
+
+        if isinstance(key, slice):
+            start = key.start + self._index if key.start else None
+            stop = key.stop + self._index if key.stop else None
+            step = key.step + self._index if key.step else None
+            self._sum -= sum(self._data[slice(start, stop, step)])
+            self._sum += sum(value)
+            self._avg = self._sum / len(self)
+            self._data[slice(start, stop, step)] = value
+            return
+
+        super().__setitem__(key, value)

@@ -198,3 +198,54 @@ def test_iter():
 
     # убедимся, что не сломали список
     assert base == [1, 2, 3]
+
+
+def test_getitem():
+    """
+    Проверка обращения к элементу
+    """
+    c = Carousel(maxlen=2)
+    c.push(1)
+    c.push(2)
+    c.push(3)
+    c.push(4)
+    assert c[0] == 3
+    assert c[1] == 4
+    assert c[-1] == 4
+    assert c[:] == [3, 4]
+
+    with pytest.raises(IndexError):
+        assert c[2]
+
+    with pytest.raises(IndexError):
+        # noinspection PyTypeChecker
+        assert c['test']
+
+
+def test_setitem():
+    """
+    Проверка подмены элемента
+    """
+    c = Carousel(maxlen=2)
+    c.push(1)
+    c.push(2)
+    c.push(3)
+    c.push(4)
+
+    assert c[0] == 3
+    assert c[1] == 4
+    assert c[-1] == 4
+    assert c[:] == [3, 4]
+
+    c[0] = 9
+    assert c[0] == 9
+
+    c[:] = [7, 6]
+    assert c[:] == [7, 6]
+
+    with pytest.raises(IndexError):
+        c[2] = 1
+
+    with pytest.raises(IndexError):
+        # noinspection PyTypeChecker
+        c['test'] = 1

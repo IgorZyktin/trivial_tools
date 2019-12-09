@@ -123,3 +123,46 @@ def test_shrink(numbers):
         m.push(number)
         assert approx(m.avg) == ref
         assert approx(m.sum) == summ
+
+
+def test_getitem(numbers):
+    """
+    Проверка обращения к элементу
+    """
+    m = MovingAverage(maxlen=4)
+    for number in numbers:
+        m.push(number)
+
+    assert approx(m[0]) == 9.0
+    assert approx(m[1]) == 87.0
+    assert approx(m[2]) == 51.0
+    assert approx(m[3]) == 23.0
+
+    assert m[:] == [9.0, 87.0, 51.0, 23.0]
+
+    assert approx(m.avg) == 42.5
+    assert approx(m.sum) == 170.0
+
+
+def test_setitem(numbers):
+    """
+    Проверка подмены элемента
+    """
+    m = MovingAverage(maxlen=4)
+    for number in numbers:
+        m.push(number)
+
+    m[0] = 99.0
+
+    assert approx(m[0]) == 99.0
+    assert approx(m[1]) == 87.0
+    assert approx(m[2]) == 51.0
+    assert approx(m[3]) == 23.0
+
+    assert approx(m.avg) == 65.0
+    assert approx(m.sum) == 260.0
+
+    m[:] = [7.0, 28.0, 31.0, -900.0]
+
+    assert approx(m.avg) == -208.5
+    assert approx(m.sum) == -834.0

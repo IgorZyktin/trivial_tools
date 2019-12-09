@@ -25,7 +25,7 @@
 
 """
 # встроенные модули
-from typing import Any, Optional, Sequence, List, Generator, Union
+from typing import Any, Optional, Collection, List, Generator, Union
 
 # модули проекта
 from trivial_tools.special.special import fail
@@ -39,14 +39,14 @@ class Carousel:
     """
     __slots__ = ('_sentinel', '_data', '_len', '_index', 'maxlen')
 
-    def __init__(self, source: Optional[Sequence] = None,
+    def __init__(self, source: Optional[Collection] = None,
                  maxlen: int = 0, sentinel: Any = object()):
         """
         Создание экземпляра. Можно задать базовую коллекцию, размер и объект для пустых слотов
 
-        :param source:
-        :param maxlen:
-        :param sentinel:
+        :param source: исходная коллекция элементов, на базе которой надо собрать экземпляр
+        :param maxlen: максимальное киличество элементов (ширина окна вычисления)
+        :param sentinel: элемент для заполнения пустых ячеек (можно добавить свой)
         """
         self._sentinel = sentinel
         self._data = []
@@ -92,7 +92,7 @@ class Carousel:
         result = f'{s_type(self)}([{string}], maxlen={self.maxlen})'
         return result
 
-    def populate(self, source: Sequence[Any]) -> None:
+    def populate(self, source: Collection[Any]) -> None:
         """
         Наполнить хранилище предоставленными данными
 

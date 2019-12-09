@@ -200,55 +200,203 @@ def test_iter():
     assert base == [1, 2, 3]
 
 
-def test_getitem():
+def test_getitem_int():
     """
-    Проверка обращения к элементу
+    Проверка обращения к элементу (целое как индекс)
     """
-    c = Carousel(maxlen=2)
-    c.push(1)
-    c.push(2)
-    c.push(3)
-    c.push(4)
-    assert c[0] == 3
-    assert c[1] == 4
-    assert c[-1] == 4
-    assert c[:] == [3, 4]
+    c = Carousel(maxlen=4)
 
     with pytest.raises(IndexError):
-        assert c[2]
+        assert c[0]
 
     with pytest.raises(IndexError):
         # noinspection PyTypeChecker
         assert c['test']
 
+    c.push(1)
+    assert c[0] == 1
+    assert c[-1] == 1
 
-def test_setitem():
+    with pytest.raises(IndexError):
+        assert c[2]
+
+    c.push(2)
+    assert c[0] == 1
+    assert c[1] == 2
+    assert c[-1] == 2
+    assert c[-2] == 1
+
+    c.push(3)
+    assert c[0] == 1
+    assert c[1] == 2
+    assert c[2] == 3
+    assert c[-1] == 3
+    assert c[-2] == 2
+    assert c[-3] == 1
+
+    c.push(4)
+    assert c[0] == 1
+    assert c[1] == 2
+    assert c[2] == 3
+    assert c[3] == 4
+    assert c[-1] == 4
+    assert c[-2] == 3
+    assert c[-3] == 2
+    assert c[-4] == 1
+
+    c.push(5)
+    assert c[0] == 2
+    assert c[1] == 3
+    assert c[2] == 4
+    assert c[3] == 5
+    assert c[-1] == 5
+    assert c[-2] == 4
+    assert c[-3] == 3
+    assert c[-4] == 2
+
+    c.push(6)
+    assert c[0] == 3
+    assert c[1] == 4
+    assert c[2] == 5
+    assert c[3] == 6
+    assert c[-1] == 6
+    assert c[-2] == 5
+    assert c[-3] == 4
+    assert c[-4] == 3
+
+    c.push(7)
+    assert c[0] == 4
+    assert c[1] == 5
+    assert c[2] == 6
+    assert c[3] == 7
+    assert c[-1] == 7
+    assert c[-2] == 6
+    assert c[-3] == 5
+    assert c[-4] == 4
+
+    c.push(8)
+    assert c[0] == 5
+    assert c[1] == 6
+    assert c[2] == 7
+    assert c[3] == 8
+    assert c[-1] == 8
+    assert c[-2] == 7
+    assert c[-3] == 6
+    assert c[-4] == 5
+
+
+def test_getitem_slice():
+    """
+    Проверка обращения к элементу (срез как индекс)
+    """
+    c = Carousel(maxlen=4)
+
+    assert c[:] == []
+
+    for i in range(1, 9):
+        c.push(i)
+
+    assert c[0] == 5
+    assert c[1] == 6
+    assert c[2] == 7
+    assert c[3] == 8
+
+    assert c[:] == [5, 6, 7, 8]
+
+    assert c[:4] == [5, 6, 7, 8]
+    assert c[:3] == [5, 6, 7]
+    assert c[:2] == [5, 6]
+    assert c[:1] == [5]
+
+    assert c[1:] == [6, 7, 8]
+    assert c[2:] == [7, 8]
+    assert c[3:] == [8]
+    assert c[4:] == []
+
+    c.push(9)
+
+    assert c[:] == [6, 7, 8, 9]
+
+    assert c[:4] == [6, 7, 8, 9]
+    assert c[:3] == [6, 7, 8]
+    assert c[:2] == [6, 7]
+    assert c[:1] == [6]
+
+    assert c[1:] == [7, 8, 9]
+    assert c[2:] == [8, 9]
+    assert c[3:] == [9]
+    assert c[4:] == []
+
+    c.push(10)
+
+    assert c[:] == [7, 8, 9, 10]
+
+    assert c[1:] == [8, 9, 10]
+    assert c[2:] == [9, 10]
+    assert c[3:] == [10]
+    assert c[4:] == []
+
+    assert c[0:3:2] == [7, 9]
+
+
+def test_setitem_int():
     """
     Проверка подмены элемента
     """
-    c = Carousel(maxlen=2)
+    c = Carousel(maxlen=3)
+
+    with pytest.raises(IndexError):
+        c[0] = 1
+
     c.push(1)
     c.push(2)
     c.push(3)
     c.push(4)
+    c.push(5)
+    c.push(6)
 
-    assert c[0] == 3
-    assert c[1] == 4
-    assert c[-1] == 4
-    assert c[:] == [3, 4]
+    assert c[0] == 4
+    assert c[1] == 5
+    assert c[2] == 6
+
+    assert c[-1] == 6
+    assert c[-2] == 5
+    assert c[-3] == 4
+
+    assert c[:] == [4, 5, 6]
 
     c[0] = 9
     assert c[0] == 9
+    assert c[1] == 5
+    assert c[2] == 6
 
-    c[:] = [7, 6]
-    assert c[:] == [7, 6]
+    c[1] = 7
+    assert c[0] == 9
+    assert c[1] == 7
+    assert c[2] == 6
+
+    c[2] = 4
+    assert c[0] == 9
+    assert c[1] == 7
+    assert c[2] == 4
+
+    c[-1] = 78
+    assert c[0] == 9
+    assert c[1] == 7
+    assert c[2] == 78
 
     with pytest.raises(IndexError):
-        c[2] = 1
+        c[75] = 6
+
+
+def test_setitem_slice():
+    """
+    Проверка подмены элемента
+    """
+    c = Carousel(maxlen=4)
 
     with pytest.raises(IndexError):
-        # noinspection PyTypeChecker
-        c['test'] = 1
+        c[:] = [9, 8, 7, 6]
 
 
 def test_is_sentinel():
@@ -258,8 +406,4 @@ def test_is_sentinel():
     c = Carousel(maxlen=2)
 
     with pytest.raises(IndexError):
-        something = c[0]
-
-    c.push(1)
-    with pytest.raises(IndexError):
-        something = c[:]
+        _ = c[0]

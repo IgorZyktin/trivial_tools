@@ -204,7 +204,11 @@ class Carousel:
         :return: содержимое внутреннего хранилища
         """
         if isinstance(item, int):
-            result = self._data[self._index + item]
+            if not self._len:
+                fail(f'Попытка получить элемент из пустого объекта {s_type(self)}',
+                     reason=IndexError)
+
+            result = self._data[self.get_real_index(item)]
 
             if result is self._sentinel:
                 fail(f'В экземпляре {s_type(self)} нет элемента с индексом {item!r}',
@@ -213,42 +217,35 @@ class Carousel:
             return result
 
         if isinstance(item, slice):
-            start = item.start + self._index if item.start else None
-            stop = item.stop + self._index if item.stop else None
-            step = item.step + self._index if item.step else None
-            result = self._data[slice(start, stop, step)]
+            return self.get_contents()[item]
 
-            if any(x is self._sentinel for x in result):
-                fail(f'Часть среза {item!r} экземпляра {s_type(self)} содержит '
-                     'непроинициализированные значения ', reason=IndexError)
-
-            return result
-
-        fail(
-            f"Тип {s_type(self)} поддерживает работу только с индексами int и slice!",
-            reason=IndexError
-        )
+        fail(f"Тип {s_type(self)} поддерживает работу только с индексами int и slice!",
+             reason=IndexError)
 
     def __setitem__(self, key: Union[int, slice], value: Any) -> None:
         """
         Записать элемент по индексу.
         Обеспечивается обычный доступ к внутреннему хранилищу, просто со смещением индекса
 
-        :param key: ключ индексации
+        :param key: ключ индексации, только int
         :param value: данные для записи (любой тип)
         """
-        if isinstance(key, int):
-            self._data[self._index + key] = value
-            return
+        if not isinstance(key, int):
+            fail(f"Тип {s_type(self)} поддерживает работу только с индексами типа int!",
+                 reason=IndexError)
 
-        if isinstance(key, slice):
-            start = key.start + self._index if key.start else None
-            stop = key.stop + self._index if key.stop else None
-            step = key.step + self._index if key.step else None
-            self._data[slice(start, stop, step)] = value
-            return
+        if not self._len:
+            fail(f'Попытка присвоить элемент по индексу {key} в пустой объект {s_type(self)}',
+                 reason=IndexError)
 
-        fail(
-            f"Тип {s_type(self)} поддерживает работу только с индексами int и slice!",
-            reason=IndexError
-        )
+        self._data[self.get_real_index(key)] = value
+        return
+
+    def get_real_index(self, key: int) -> int:
+        """
+        Настояшее положение ячеек, с учётом их сдвига
+        """
+        index = self._index + key
+        if index > self._len - 1:
+            index -= self._len
+        return index

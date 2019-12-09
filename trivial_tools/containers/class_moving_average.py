@@ -87,20 +87,10 @@ class MovingAverage(Carousel):
         :param value: данные для записи (любой тип)
         """
         if isinstance(key, int):
-            self._sum -= self._data[self._index + key]
+            self._sum -= self._data[self.get_real_index(key)]
             self._sum += value
             self._avg = self._sum / len(self)
-            self._data[self._index + key] = value
-            return
-
-        if isinstance(key, slice):
-            start = key.start + self._index if key.start else None
-            stop = key.stop + self._index if key.stop else None
-            step = key.step + self._index if key.step else None
-            self._sum -= sum(self._data[slice(start, stop, step)])
-            self._sum += sum(value)
-            self._avg = self._sum / len(self)
-            self._data[slice(start, stop, step)] = value
+            self._data[self.get_real_index(key)] = value
             return
 
         super().__setitem__(key, value)

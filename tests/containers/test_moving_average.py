@@ -162,7 +162,5 @@ def test_setitem(numbers):
     assert approx(m.avg) == 65.0
     assert approx(m.sum) == 260.0
 
-    m[:] = [7.0, 28.0, 31.0, -900.0]
-
-    assert approx(m.avg) == -208.5
-    assert approx(m.sum) == -834.0
+    with pytest.raises(IndexError):
+        m[:] = [7.0, 28.0, 31.0, -900.0]

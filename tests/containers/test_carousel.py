@@ -249,3 +249,17 @@ def test_setitem():
     with pytest.raises(IndexError):
         # noinspection PyTypeChecker
         c['test'] = 1
+
+
+def test_is_sentinel():
+    """
+    Проверка выдачи пустого элемента
+    """
+    c = Carousel(maxlen=2)
+
+    with pytest.raises(IndexError):
+        something = c[0]
+
+    c.push(1)
+    with pytest.raises(IndexError):
+        something = c[:]

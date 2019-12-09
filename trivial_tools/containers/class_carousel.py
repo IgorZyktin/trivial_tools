@@ -204,13 +204,25 @@ class Carousel:
         :return: содержимое внутреннего хранилища
         """
         if isinstance(item, int):
-            return self._data[self._index + item]
+            result = self._data[self._index + item]
+
+            if result is self._sentinel:
+                fail(f'В экземпляре {s_type(self)} нет элемента с индексом {item!r}',
+                     reason=IndexError)
+
+            return result
 
         if isinstance(item, slice):
             start = item.start + self._index if item.start else None
             stop = item.stop + self._index if item.stop else None
             step = item.step + self._index if item.step else None
-            return self._data[slice(start, stop, step)]
+            result = self._data[slice(start, stop, step)]
+
+            if any(x is self._sentinel for x in result):
+                fail(f'Часть среза {item!r} экземпляра {s_type(self)} содержит '
+                     'непроинициализированные значения ', reason=IndexError)
+
+            return result
 
         fail(
             f"Тип {s_type(self)} поддерживает работу только с индексами int и slice!",

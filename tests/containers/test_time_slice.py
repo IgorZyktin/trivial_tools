@@ -141,30 +141,37 @@ def test_push_sparse(var_u, var_v, var_w, var_x, var_y, var_z):
     Проверка алгоритма добавления
     """
     t = TimeSlice(maxlen=14)
+    assert t.get_oldest() is None
 
     t.push(var_u)
     assert t.get_contents() == [var_u]
     assert t.delta == 0
+    assert t.get_oldest() == var_u
 
     t.push(var_v)
     assert t.get_contents() == [var_u, var_v]
     assert t.delta == 5
+    assert t.get_oldest() == var_u
 
     t.push(var_w)
     assert t.get_contents() == [var_u, var_v, var_w]
     assert t.delta == 10
+    assert t.get_oldest() == var_u
 
     t.push(var_x)
     assert t.get_contents() == [var_u, var_v, var_w, var_x]
     assert t.delta == 15
+    assert t.get_oldest() == var_u
 
     t.push(var_y)
     assert t.get_contents() == [var_v, var_w, var_x, var_y]
     assert t.delta == 15
+    assert t.get_oldest() == var_v
 
     t.push(var_z)
     assert t.get_contents() == [var_w, var_x, var_y, var_z]
     assert t.delta == 15
+    assert t.get_oldest() == var_w
 
 
 def test_not_filled(var_u, var_v, var_w, var_x, var_y, var_z):

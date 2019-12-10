@@ -161,3 +161,11 @@ class TimeSlice(Carousel):
         Проверка на то, что мы ещё не собрали достаточно данных для анализа
         """
         return self.minimum_allowed_timestamp is None
+
+    def get_oldest(self):
+        """
+        Получить самый старый элемент в контейнере
+        """
+        for element in self:
+            return element
+        return None

@@ -21,4 +21,5 @@ def analyze_channels(string: str,
     (35, 'C', 1.0)
     """
     number, phase, _, mul = pattern.search(string).groups()
-    return int(number), phase, 1.0 if mul is None else float(mul)
+    result = int(number), phase.upper(), 1.0 if mul is None else float(mul)
+    return result

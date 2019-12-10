@@ -88,7 +88,10 @@ class Carousel:
         Текстовый вид
         """
         contents = [str(x) if x is not self._sentinel else 'NULL' for x in self._internals()]
-        string = ', '.join(contents)
+        if len(contents) <= 5:
+            string = ', '.join(contents)
+        else:
+            string = ', '.join([*contents[0:3], '...', *contents[-3:]])
         result = f'{s_type(self)}([{string}], maxlen={self.maxlen})'
         return result
 

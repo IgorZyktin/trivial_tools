@@ -7,91 +7,125 @@
 # встроенные модули
 import time
 from datetime import date, datetime
-from typing import Optional, Sequence, List
+from typing import Sequence, List, Union
+
+__all__ = [
+    'parse_date',
+    'parse_dates',
+    'parse_time',
+    'parse_time_s',
+    'parse_time_ms',
+    'cur_time',
+    'cur_time_s',
+    'cur_time_ms',
+    'timestamp_to_str',
+    'date_to_text',
+    'datetime_to_text',
+    'datetime_to_text_s',
+    'datetime_to_text_ms'
+]
 
 
-def parse_date(string: Optional[str], pattern: str = '%Y-%m-%d') -> Optional[date]:
+def parse_date(string: str, format_string: str = '%Y-%m-%d') -> date:
     """
     Обработка даты (при возможности)
+
+    >>> parse_date('2019-12-01')
+    datetime.date(2019, 12, 1)
     """
-    if string:
-        return datetime.strptime(string, pattern).date()
-    return None
+    return datetime.strptime(string, format_string).date()
 
 
-def parse_dates(container: Sequence, pattern: str = '%Y-%m-%d') -> List[date]:
+def parse_dates(container: Sequence, format_string: str = '%Y-%m-%d') -> List[date]:
     """
     Распарсить множество дат
+
+    >>> parse_dates(['2019-12-01', '2019-12-02'])
+    [datetime.date(2019, 12, 1), datetime.date(2019, 12, 2)]
     """
-    result = []
-    for each in container:
-        new_date = parse_date(each, pattern)
-        if new_date is not None:
-            result.append(new_date)
-    return sorted(result)
+    result = [parse_date(each, format_string) for each in container]
+    result.sort()
+    return result
 
 
-def parse_datetime(string: Optional[str], pattern: str = '%Y-%m-%d %H:%M:%S') -> Optional[date]:
+def parse_time(text: str, format_string: str) -> datetime:
     """
-    Обработка даты+время (при возможности)
+    Преобразовать текст в объект времени
     """
-    if string:
-        return datetime.strptime(string, pattern)
-    return None
+    return datetime.strptime(text, format_string)
 
 
-def parse_datetime_ms(string: Optional[str],
-                      pattern: str = '%Y-%m-%d %H:%M:%S.%f') -> Optional[date]:
+def parse_time_s(text: str, format_string: str = "%Y-%m-%d %H:%M:%S") -> datetime:
     """
-    Обработка даты+время (при возможности)
+    Преобразовать текст в объект времени с точностью до секунд
+
+    >>> parse_time_s('2019-12-01 14:32:27')
+    datetime.datetime(2019, 12, 1, 14, 32, 27)
     """
-    return parse_datetime(string, pattern)
+    return datetime.strptime(text, format_string)
 
 
-def cur_time(format_string: str = '%H:%M:%S') -> str:
+def parse_time_ms(text: str, format_string: str = "%Y-%m-%d %H:%M:%S.%f") -> datetime:
     """
-    Получить строку с текущим временем в формате %H:%M:%S
+    Преобразовать текст в объект времени с точностью до микросекунд
+
+    >>> parse_time_ms('2019-12-01 14:32:27.235486')
+    datetime.datetime(2019, 12, 1, 14, 32, 27, 235486)
+    """
+    return parse_time(text, format_string)
+
+
+def cur_time(format_string: str) -> str:
+    """
+    Получить строку с текущим временем
     """
     return datetime.now().strftime(format_string)
 
 
-def cur_time_ms() -> str:
+def cur_time_s(format_string: str = '%H:%M:%S') -> str:
     """
-    Получить строку с текущим временем в формате %H:%M:%S.%f
+    Получить строку с текущим временем с точностью до секунд
     """
-    return cur_time('%H:%M:%S.%f')
+    return cur_time(format_string)
 
 
-def time_to_str(moment: float, format_string: str = "%Y-%m-%d %H:%M:%S") -> str:
-    """Преобразовать timestamp в текстовую форму.
-
-    :param moment: timestamp в виде float
-    :param format_string: формат в котором надо оформить строку
-    :return: текстовая форма времени
+def cur_time_ms(format_string: str = '%H:%M:%S.%f') -> str:
     """
-    result = time.strftime(format_string, datetime.fromtimestamp(moment).timetuple())
-    return result
+    Получить строку с текущим временем с точностью до микросекунд
+    """
+    return cur_time(format_string)
+
+
+def timestamp_to_str(timestamp: float, format_string: str = "%Y-%m-%d %H:%M:%S") -> str:
+    """
+    Преобразовать timestamp в текстовую форму
+    """
+    return time.strftime(format_string, datetime.fromtimestamp(timestamp).timetuple())
 
 
 def date_to_text(moment: date, format_string: str = "%Y-%m-%d") -> str:
     """
     Преобразовать время в виде date в текстовую форму
     """
-    result = moment.strftime(format_string)
-    return result
+    return datetime_to_text(moment, format_string)
 
 
-def datetime_to_text(moment: datetime, format_string: str = "%Y-%m-%d %H:%M:%S") -> str:
+def datetime_to_text(moment: Union[date, datetime], format_string: str) -> str:
     """
     Преобразовать время в виде datetime в текстовую форму
     """
-    result = moment.strftime(format_string)
-    return result
+    return moment.strftime(format_string)
+
+
+def datetime_to_text_s(moment: datetime, format_string: str = "%Y-%m-%d %H:%M:%S") -> str:
+    """
+    Преобразовать время в виде datetime в текстовую форму
+    """
+    return datetime_to_text(moment, format_string)
 
 
 def datetime_to_text_ms(moment: datetime, format_string: str = "%Y-%m-%d %H:%M:%S.%f") -> str:
     """
     Преобразовать время в виде datetime в текстовую форму
     """
-    result = datetime_to_text(moment, format_string)
-    return result
+    return datetime_to_text(moment, format_string)

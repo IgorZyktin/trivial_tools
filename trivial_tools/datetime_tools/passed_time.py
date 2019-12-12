@@ -137,6 +137,7 @@ def form_seconds(delta: timedelta) -> Optional[str]:
     """
     # FIXME - 22 секунд
     # FIXME - 24 секунд
+    # FIXME - 53 секунд
     seconds = delta.seconds
 
     if not seconds:

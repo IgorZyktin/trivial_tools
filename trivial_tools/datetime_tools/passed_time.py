@@ -119,10 +119,10 @@ def form_minutes(delta: timedelta) -> Tuple[Optional[str], int]:
     d1 = abs(minutes) % 100
     d2 = d1 % 10
 
-    if d2 in (1,):
+    if d2 in (1,) and minutes not in (11, 12, 13):
         result = f'{minutes} минута', rest
 
-    elif d2 in (2, 3, 4):
+    elif d2 in (2, 3, 4) and minutes not in (11, 12, 13, 14):
         result = f'{minutes} минуты', rest
 
     else:

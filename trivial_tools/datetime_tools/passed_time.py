@@ -140,10 +140,13 @@ def form_seconds(delta: timedelta) -> Optional[str]:
     if not seconds:
         return None
 
-    if seconds in (1, 21, 31, 41, 51, 61, 71, 81, 91):
+    d1 = abs(seconds) % 100
+    d2 = d1 % 10
+
+    if d2 in (1,) and seconds not in (11, 12, 13):
         result = f'{seconds} секунда'
 
-    elif seconds in (2, 3, 4):
+    elif d2 in (2, 3, 4) and seconds not in (11, 12, 13):
         result = f'{seconds} секунды'
 
     else:

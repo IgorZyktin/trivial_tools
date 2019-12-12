@@ -25,7 +25,7 @@ from typing import Generator, Any
 
 # модули проекта
 from trivial_tools.formatters.base import s_type
-from trivial_tools.datetime_tools.text import datetime_to_text
+from trivial_tools.datetime_tools.text import datetime_to_text_s
 
 
 class Resampler:
@@ -73,7 +73,7 @@ class Resampler:
         Текстовое представление
         """
         if self.previous:
-            previous = datetime_to_text(self.previous[self.datetime_index])
+            previous = datetime_to_text_s(self.previous[self.datetime_index])
         else:
             previous = 'None'
 

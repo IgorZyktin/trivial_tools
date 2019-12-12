@@ -102,8 +102,18 @@ def test_seconds():
     assert form_seconds(timedelta(seconds=19)) == '19 секунд'
     assert form_seconds(timedelta(seconds=20)) == '20 секунд'
     assert form_seconds(timedelta(seconds=21)) == '21 секунда'
+    assert form_seconds(timedelta(seconds=22)) == '22 секунды'
+    assert form_seconds(timedelta(seconds=23)) == '23 секунды'
+    assert form_seconds(timedelta(seconds=24)) == '24 секунды'
+    assert form_seconds(timedelta(seconds=25)) == '25 секунд'
+    assert form_seconds(timedelta(seconds=26)) == '26 секунд'
+    assert form_seconds(timedelta(seconds=30)) == '30 секунд'
+    assert form_seconds(timedelta(seconds=31)) == '31 секунда'
+    assert form_seconds(timedelta(seconds=32)) == '32 секунды'
     assert form_seconds(timedelta(seconds=33)) == '33 секунды'
     assert form_seconds(timedelta(seconds=46)) == '46 секунд'
+    assert form_seconds(timedelta(seconds=51)) == '51 секунда'
+    assert form_seconds(timedelta(seconds=53)) == '53 секунды'
     assert form_seconds(timedelta(seconds=59)) == '59 секунд'
 
 

@@ -88,7 +88,7 @@ def byte_count_to_si(total_bytes: int, lang: str = 'RU') -> str:
         total_bytes = abs(total_bytes)
 
     if total_bytes < 1000:
-        return f'{prefix}{total_bytes} ' + SUFFIXES[lang]['B']
+        return f'{prefix}{total_bytes:0.1f} ' + SUFFIXES[lang]['B']
 
     if total_bytes < 999_950:
         return f'{prefix}{total_bytes / 1000:0.1f} ' + SUFFIXES[lang]['kB']
@@ -128,7 +128,7 @@ def byte_count_to_text(total_bytes: int, lang: str = 'RU') -> str:
         total_bytes = abs(total_bytes)
 
     if total_bytes < 1024:
-        return f'{prefix}{total_bytes} ' + SUFFIXES[lang]['B']
+        return f'{prefix}{total_bytes:0.1f} ' + SUFFIXES[lang]['B']
 
     total_bytes /= 1024
 

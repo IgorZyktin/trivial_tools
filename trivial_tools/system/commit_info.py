@@ -9,7 +9,7 @@ import subprocess
 
 
 def get_git_revision_hash(cmd: str = 'git rev-parse HEAD',
-                          encoding: str = 'cp866') -> str:
+                          encoding: str = 'utf-8') -> str:
     """Получить хеш текущего коммита.
 
     Обращается к системе и получает данные о том,
@@ -19,7 +19,7 @@ def get_git_revision_hash(cmd: str = 'git rev-parse HEAD',
     :param cmd: команда для исполнения подпроцессом
 
     :param encoding: из какой кодировки произвести конвертацию
-    (cp866 это стандартная кодировка терминала на Windows)
+    (стандартная кодировка терминала на Windows - cp866)
 
     Пример вывода:
         'aa4d5ef11973828a18425c369e0fdde5fd45c11d'
@@ -34,20 +34,20 @@ def get_git_revision_hash(cmd: str = 'git rev-parse HEAD',
     stdout, stderr = pipe.communicate()
     response = stdout.decode(encoding)
 
-    if response.replace('"', '').replace("'", '').startswith(('git не является', 'fatal')):
-        response = 'Unknown'
+    if response.replace('"', '').replace("'", '').startswith(('git', 'fatal')):
+        response = 'unknown'
 
     return response
 
 
 def get_git_revision_hash_short(cmd: str = 'git rev-parse --short HEAD',
-                                encoding: str = 'cp866') -> str:
+                                encoding: str = 'utf-8') -> str:
     """Получить укороченный хеш текущего коммита.
 
     :param cmd: команда для исполнения подпроцессом
 
     :param encoding: из какой кодировки произвести конвертацию
-    (cp866 это стандартная кодировка терминала на Windows)
+    (стандартная кодировка терминала на Windows - cp866)
 
     Пример вывода:
         'aa4d5ef'

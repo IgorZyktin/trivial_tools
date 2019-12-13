@@ -1,33 +1,36 @@
 # -*- coding: utf-8 -*-
 """
 
-    Контейнер для вычисления скользящего среднего.
-    В него можно постоянно можно добавлять элементы и быстро получать среднее
+    Контейнер для вычисления скользящей суммы.
+    В него можно постоянно можно добавлять элементы и быстро получать сумму
 
     Пример работы с контейнером:
-    m = MovingAverage(maxlen=4)  # среднее равно 0
-    m.push(1)   # среднее равно 1
-    m.push(3)   # среднее равно 2
-    m.push(5)   # среднее равно 3
-    m.push(6)   # среднее равно 3,75
-    m.push(8)   # среднее равно 5,5
-    m.push(41)  # среднее равно 15
-    m.push(9)   # среднее равно 16
+    m = MovingSum(window=4)  # сумма равна 0
+    m.push(8)    # сумма равна 8
+    m.push(41)   # сумма равна 49
+    m.push(9)    # сумма равна 58
+    m.push(6)    # сумма равна 64
+    m.push(32)   # сумма равна 88
+    m.push(58)   # сумма равна 105
+    m.push(8)    # сумма равна 104
+    m.push(78)   # сумма равна 176
+    m.push(3)    # сумма равна 147
+    m.push(2)    # сумма равна 91
 
 """
 # встроенные модули
 from typing import Union, Optional, Sequence, Any
 
 # модули проекта
-from trivial_tools.containers.class_moving_sum import MovingSum
+from trivial_tools.containers.class_carousel import Carousel
 
 
-class MovingAverage(MovingSum):
+class MovingSum(Carousel):
     """
-    Контейнер для вычисления скользящего среднего.
-    В него можно постоянно можно добавлять элементы и быстро получать среднее
+    Контейнер для вычисления скользящей суммы.
+    В него можно постоянно можно добавлять элементы и быстро получать сумму
     """
-    __slots__ = ('_avg',)
+    __slots__ = ('_sum',)
 
     def __init__(self, source: Optional[Sequence] = None,
                  window: int = 0, sentinel: Any = object()):
@@ -38,7 +41,7 @@ class MovingAverage(MovingSum):
         :param window: максимальное киличество элементов (ширина окна вычисления)
         :param sentinel: элемент для заполнения пустых ячеек (можно добавить свой)
         """
-        self._avg = 0.0
+        self._sum: Union[int, float] = 0
         super().__init__(source, window, sentinel)
 
     def push(self, value: Union[int, float]) -> None:
@@ -51,24 +54,28 @@ class MovingAverage(MovingSum):
 
         :param value: новое число, которое соответствует сдвигу окна среднего на один элемент
         """
-        super().push(value)
-        self._avg = self._sum / len(self)
+        old_value = super().push(value)
+
+        if old_value is not self._sentinel:
+            self._sum -= old_value
+
+        self._sum += value
 
     def restore(self) -> None:
         """
         Сбросить параметры
         """
-        self._avg = 0.0
+        self._sum = 0
         super().restore()
 
     @property
-    def avg(self) -> float:
+    def sum(self) -> float:
         """
-        Среднее всех элементов
+        Сумма всех элементов
         """
-        return self._avg
+        return self._sum
 
-    def __setitem__(self, key: Union[int, slice], value: Union[int, float, Sequence]) -> Any:
+    def __setitem__(self, key: Union[int, slice], value: Union[int, float, Sequence]) -> None:
         """
         Записать элемент по индексу.
         Обеспечивается обычный доступ к внутреннему хранилищу, просто со смещением индекса
@@ -76,5 +83,8 @@ class MovingAverage(MovingSum):
         :param key: ключ индексации
         :param value: данные для записи (любой тип)
         """
+        if isinstance(key, int):
+            self._sum -= self._data[self.get_real_index(key)]
+            self._sum += value
+
         super().__setitem__(key, value)
-        self._avg = self._sum / len(self)

@@ -79,7 +79,7 @@ def test_creation():
     Проверка создания
     """
     t = TimeSlice()
-    assert t.maxlen == 1
+    assert t.window == 1
     assert t.datetime_index == 0
 
 
@@ -112,7 +112,7 @@ def test_push_dense(var_a, var_b, var_c, var_d, var_e, var_f):
     """
     Проверка алгоритма добавления
     """
-    t = TimeSlice(maxlen=4)
+    t = TimeSlice(window=4)
 
     t.push(var_a)
     assert t.newest == int(var_a[0].timestamp())
@@ -140,7 +140,7 @@ def test_push_sparse(var_u, var_v, var_w, var_x, var_y, var_z):
     """
     Проверка алгоритма добавления
     """
-    t = TimeSlice(maxlen=14)
+    t = TimeSlice(window=14)
     assert t.get_oldest() is None
 
     t.push(var_u)
@@ -178,7 +178,7 @@ def test_not_filled(var_u, var_v, var_w, var_x, var_y, var_z):
     """
     Проверка на заполненность
     """
-    t = TimeSlice(maxlen=14)
+    t = TimeSlice(window=14)
 
     t.push(var_u)
     assert t.not_filled
@@ -203,7 +203,7 @@ def test_getitem(var_u):
     """
     Проверка на доступ к элементам
     """
-    t = TimeSlice(maxlen=14)
+    t = TimeSlice(window=14)
     t.push(var_u)
 
     with pytest.raises(NotImplementedError):
@@ -217,7 +217,7 @@ def test_same_time(var_a, var_b, var_c, var_d):
     """
     Проверка вставки элементов с одним временем или устаревшим временем
     """
-    t = TimeSlice(maxlen=14)
+    t = TimeSlice(window=14)
 
     t.push(var_a)
     assert len(t) == 1

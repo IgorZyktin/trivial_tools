@@ -18,20 +18,20 @@ def test_creation():
     with pytest.raises(ValueError):
         Carousel()
 
-    c = Carousel(maxlen=2)
+    c = Carousel(window=2)
     assert len(c) == 0
-    assert c.maxlen == 2
+    assert c.window == 2
     assert c.get_contents() == []
 
     c = Carousel([1, 2, 3])
     assert len(c) == 3
-    assert c.maxlen == 3
+    assert c.window == 3
     assert c.get_contents() == [1, 2, 3]
     assert c.extract() == [1, 2, 3]
 
-    c = Carousel([1, 2, 3], maxlen=2)
+    c = Carousel([1, 2, 3], window=2)
     assert len(c) == 2
-    assert c.maxlen == 2
+    assert c.window == 2
     assert c.get_contents() == [2, 3]
     assert c.extract() == [2, 3]
 
@@ -41,7 +41,7 @@ def test_push():
     Проверка добавления элемента
     """
     maxlen = 3
-    c = Carousel(maxlen=maxlen, sentinel=None)
+    c = Carousel(window=maxlen, sentinel=None)
     assert c.get_contents() == []
 
     x = c.push(1)
@@ -74,7 +74,7 @@ def test_len():
     Проверка измерения длины
     """
     maxlen = 5
-    c = Carousel(maxlen=maxlen)
+    c = Carousel(window=maxlen)
     for i in range(1, 10):
         c.push(i)
         assert len(c) == i if i < maxlen else maxlen
@@ -90,7 +90,7 @@ def test_get_contents():
     assert c._data == [1, 2, 3]
     assert c._data == c.get_contents()
 
-    c = Carousel([1, 2, 3], maxlen=2)
+    c = Carousel([1, 2, 3], window=2)
     assert c.get_contents() == [2, 3]
     assert c._data == [3, 2]
     assert c._data != c.get_contents()
@@ -100,63 +100,71 @@ def test_str():
     """
     Проверка текстового представления
     """
-    c = Carousel(maxlen=4)
-    assert str(c) == 'Carousel([], maxlen=4)'
+    c = Carousel(window=4)
+    assert str(c) == 'Carousel([], window=4)'
 
     c = Carousel([1, 2, 3])
-    assert str(c) == 'Carousel([1, 2, 3], maxlen=3)'
+    assert str(c) == 'Carousel([1, 2, 3], window=3)'
 
-    c = Carousel([1, 2, 3], maxlen=2)
-    assert str(c) == 'Carousel([2, 3], maxlen=2)'
+    c = Carousel([1, 2, 3], window=2)
+    assert str(c) == 'Carousel([2, 3], window=2)'
 
 
-def test_repr():
+def test_str_long():
     """
     Проверка текстового представления
     """
-    c = Carousel(maxlen=4)
-    assert repr(c) == 'Carousel([NULL, NULL, NULL, NULL], maxlen=4)'
+    c = Carousel(window=40)
+    assert repr(c) == 'Carousel([NULL, NULL, NULL, ..., NULL, NULL, NULL], window=40)'
 
-    c = Carousel([1, 2, 3])
-    assert repr(c) == 'Carousel([1, 2, 3], maxlen=3)'
+    c = Carousel(range(100), window=40)
+    assert repr(c) == 'Carousel([60, 61, 62, ..., 97, 98, 99], window=40)'
 
-    c = Carousel([1, 2, 3], maxlen=2)
-    assert repr(c) == 'Carousel([2, 3], maxlen=2)'
+
+def test_repr_long():
+    """
+    Проверка текстового представления
+    """
+    c = Carousel(window=40)
+    assert repr(c) == 'Carousel([NULL, NULL, NULL, ..., NULL, NULL, NULL], window=40)'
+
+    c = Carousel(range(100), window=40)
+    assert repr(c) == 'Carousel([60, 61, 62, ..., 97, 98, 99], window=40)'
 
 
 def test_resize():
     """
     Проверка изменения размера
     """
-    c = Carousel([1, 2, 3], maxlen=2)
+    c = Carousel([1, 2, 3], window=2)
     assert len(c) == 2
-    assert c.maxlen == 2
+    assert c.window == 2
     assert c.get_contents() == [2, 3]
 
-    assert repr(c) == 'Carousel([2, 3], maxlen=2)'
+    assert repr(c) == 'Carousel([2, 3], window=2)'
     c.resize(5)
-    assert repr(c) == 'Carousel([2, 3, NULL, NULL, NULL], maxlen=5)'
+    assert repr(c) == 'Carousel([2, 3, NULL, NULL, NULL], window=5)'
 
     c.push(4)
     c.push(5)
 
     assert len(c) == 4
-    assert c.maxlen == 5
+    assert c.window == 5
     assert c.get_contents() == [2, 3, 4, 5]
-    assert repr(c) == 'Carousel([2, 3, 4, 5, NULL], maxlen=5)'
+    assert repr(c) == 'Carousel([2, 3, 4, 5, NULL], window=5)'
 
     c.push(6)
 
     assert len(c) == 5
-    assert c.maxlen == 5
+    assert c.window == 5
     assert c.get_contents() == [2, 3, 4, 5, 6]
-    assert repr(c) == 'Carousel([2, 3, 4, 5, 6], maxlen=5)'
+    assert repr(c) == 'Carousel([2, 3, 4, 5, 6], window=5)'
 
     c.resize(2)
-    assert repr(c) == 'Carousel([5, 6], maxlen=2)'
+    assert repr(c) == 'Carousel([5, 6], window=2)'
 
     assert len(c) == 2
-    assert c.maxlen == 2
+    assert c.window == 2
     assert c.get_contents() == [5, 6]
 
 
@@ -164,27 +172,27 @@ def test_resize_empty():
     """
     Проверка изменения размера пустой карусели
     """
-    c = Carousel(maxlen=2)
-    assert c.maxlen == 2
-    assert repr(c) == 'Carousel([NULL, NULL], maxlen=2)'
+    c = Carousel(window=2)
+    assert c.window == 2
+    assert repr(c) == 'Carousel([NULL, NULL], window=2)'
 
     c.resize(5)
-    assert c.maxlen == 5
-    assert repr(c) == 'Carousel([NULL, NULL, NULL, NULL, NULL], maxlen=5)'
+    assert c.window == 5
+    assert repr(c) == 'Carousel([NULL, NULL, NULL, NULL, NULL], window=5)'
 
     c.resize(3)
-    assert c.maxlen == 3
-    assert repr(c) == 'Carousel([NULL, NULL, NULL], maxlen=3)'
+    assert c.window == 3
+    assert repr(c) == 'Carousel([NULL, NULL, NULL], window=3)'
 
 
 def test_no_resize():
     """
     Проверка изменения размера при том же значении
     """
-    c = Carousel(maxlen=2)
-    assert c.maxlen == 2
-    c.resize(c.maxlen)
-    assert c.maxlen == 2
+    c = Carousel(window=2)
+    assert c.window == 2
+    c.resize(c.window)
+    assert c.window == 2
 
 
 def test_iter():
@@ -192,7 +200,7 @@ def test_iter():
     Проверка итерирования по карусели
     """
     base = [1, 2, 3]
-    c = Carousel(base, maxlen=4)
+    c = Carousel(base, window=4)
     for ref, value in zip(base, c):
         assert ref == value
 
@@ -204,7 +212,7 @@ def test_getitem_int():
     """
     Проверка обращения к элементу (целое как индекс)
     """
-    c = Carousel(maxlen=4)
+    c = Carousel(window=4)
 
     with pytest.raises(IndexError):
         assert c[0]
@@ -289,7 +297,7 @@ def test_getitem_slice():
     """
     Проверка обращения к элементу (срез как индекс)
     """
-    c = Carousel(maxlen=4)
+    c = Carousel(window=4)
 
     assert c[:] == []
 
@@ -343,7 +351,7 @@ def test_setitem_int():
     """
     Проверка подмены элемента
     """
-    c = Carousel(maxlen=3)
+    c = Carousel(window=3)
 
     with pytest.raises(IndexError):
         c[0] = 1
@@ -393,7 +401,7 @@ def test_setitem_slice():
     """
     Проверка подмены элемента
     """
-    c = Carousel(maxlen=4)
+    c = Carousel(window=4)
 
     with pytest.raises(IndexError):
         c[:] = [9, 8, 7, 6]
@@ -403,7 +411,7 @@ def test_is_sentinel():
     """
     Проверка выдачи пустого элемента
     """
-    c = Carousel(maxlen=2)
+    c = Carousel(window=2)
 
     with pytest.raises(IndexError):
         _ = c[0]

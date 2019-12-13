@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    Тесты карусели
+    Тесты скользящего среднего
 
 """
 # сторонние модули
@@ -44,7 +44,7 @@ def test_creation():
     with pytest.raises(ValueError):
         MovingAverage()
 
-    m = MovingAverage(maxlen=2)
+    m = MovingAverage(window=2)
     assert approx(m.avg) == 0.0
     assert approx(m.sum) == 0.0
 
@@ -52,7 +52,7 @@ def test_creation():
     assert approx(m.avg) == 2.0
     assert approx(m.sum) == 6.0
 
-    m = MovingAverage([1, 2, 3], maxlen=2)
+    m = MovingAverage([1, 2, 3], window=2)
     assert approx(m.avg) == 2.5
     assert approx(m.sum) == 5.0
 
@@ -61,7 +61,7 @@ def test_pushing(reference, summary, numbers):
     """
     Проверка добавления элементов
     """
-    m = MovingAverage(maxlen=4)
+    m = MovingAverage(window=4)
 
     for ref, summ, number in zip(reference, summary, numbers):
         m.push(number)
@@ -73,7 +73,7 @@ def test_enlarge(numbers):
     """
     Проверка увеличения размеров
     """
-    m = MovingAverage(maxlen=4)
+    m = MovingAverage(window=4)
     for number in numbers:
         m.push(number)
 
@@ -101,7 +101,7 @@ def test_shrink(numbers):
     """
     Проверка уменьшения размеров
     """
-    m = MovingAverage(maxlen=4)
+    m = MovingAverage(window=4)
     for number in numbers:
         m.push(number)
 
@@ -129,7 +129,7 @@ def test_getitem(numbers):
     """
     Проверка обращения к элементу
     """
-    m = MovingAverage(maxlen=4)
+    m = MovingAverage(window=4)
     for number in numbers:
         m.push(number)
 
@@ -148,7 +148,7 @@ def test_setitem(numbers):
     """
     Проверка подмены элемента
     """
-    m = MovingAverage(maxlen=4)
+    m = MovingAverage(window=4)
     for number in numbers:
         m.push(number)
 

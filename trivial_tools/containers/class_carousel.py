@@ -8,7 +8,7 @@
     Например вычисление скользящего среднего.
 
     Пример работы с контейнером:
-    c = Carousel(maxlen=3)  # внутреннее хранилище: [NULL, NULL, NULL]
+    c = Carousel(window=3)  # внутреннее хранилище: [NULL, NULL, NULL]
     c.push(1)               # внутреннее хранилище: [   1, NULL, NULL]
     c.push(2)               # внутреннее хранилище: [   1,    2, NULL]
     c.push(3)               # внутреннее хранилище: [   1,    2,    3]
@@ -37,15 +37,15 @@ class Carousel:
     Контейнер с бегущим индексом на базе списка.
     Нужен для обработки непрерывного входного потока данных
     """
-    __slots__ = ('_sentinel', '_data', '_len', '_index', 'maxlen')
+    __slots__ = ('_sentinel', '_data', '_len', '_index', 'window')
 
     def __init__(self, source: Optional[Collection] = None,
-                 maxlen: int = 0, sentinel: Any = object()):
+                 window: int = 0, sentinel: Any = object()):
         """
         Создание экземпляра. Можно задать базовую коллекцию, размер и объект для пустых слотов
 
         :param source: исходная коллекция элементов, на базе которой надо собрать экземпляр
-        :param maxlen: максимальное киличество элементов (ширина окна вычисления)
+        :param window: максимальное количество элементов (ширина окна вычисления)
         :param sentinel: элемент для заполнения пустых ячеек (можно добавить свой)
         """
         self._sentinel = sentinel
@@ -55,16 +55,16 @@ class Carousel:
 
         if source:
             # есть коллекция-прототип из которой можно взять данные
-            if maxlen:
-                self.maxlen = maxlen
+            if window:
+                self.window = window
             else:
-                self.maxlen = len(source)
+                self.window = len(source)
             self.restore()
             self.populate(source)
 
-        elif maxlen:
+        elif window:
             # создаём пустую карусель
-            self.maxlen = maxlen
+            self.window = window
             self.restore()
 
         else:
@@ -79,8 +79,11 @@ class Carousel:
         Текстовый вид
         """
         contents = [str(x) for x in self._internals() if x is not self._sentinel]
-        string = ', '.join(contents)
-        result = f'{s_type(self)}([{string}], maxlen={self.maxlen})'
+        if len(contents) <= 5:
+            string = ', '.join(contents)
+        else:
+            string = ', '.join([*contents[0:3], '...', *contents[-3:]])
+        result = f'{s_type(self)}([{string}], window={self.window})'
         return result
 
     def __repr__(self) -> str:
@@ -92,7 +95,7 @@ class Carousel:
             string = ', '.join(contents)
         else:
             string = ', '.join([*contents[0:3], '...', *contents[-3:]])
-        result = f'{s_type(self)}([{string}], maxlen={self.maxlen})'
+        result = f'{s_type(self)}([{string}], window={self.window})'
         return result
 
     def populate(self, source: Collection[Any]) -> None:
@@ -115,7 +118,7 @@ class Carousel:
         """
         Увеличить индекс на единицу и вернуть его значение
         """
-        if self._index < self.maxlen - 1:
+        if self._index < self.window - 1:
             self._index += 1
         else:
             self._index = 0
@@ -136,22 +139,22 @@ class Carousel:
         self.increment()
 
         self._len += 1
-        if self._len > self.maxlen:
-            self._len = self.maxlen
+        if self._len > self.window:
+            self._len = self.window
 
         return old_value
 
-    def resize(self, new_maxlen: int) -> None:
+    def resize(self, new_window: int) -> None:
         """
         Изменить размер карусели
 
-        :param new_maxlen: новая предельная длина для внутреннего хранилища
+        :param new_window: новая предельная длина для внутреннего хранилища
         """
-        if new_maxlen == self.maxlen:
+        if new_window == self.window:
             return
 
         old_data = self.get_contents()
-        self.maxlen = new_maxlen
+        self.window = new_window
         self.restore()
         self.populate(old_data)
 
@@ -177,13 +180,13 @@ class Carousel:
         """
         self._len = 0
         self._index = 0
-        self._data = [self._sentinel for _ in range(self.maxlen)]
+        self._data = [self._sentinel for _ in range(self.window)]
 
     def _internals(self) -> Generator[Any, None, None]:
         """
         Проитерироваться по элементам внутреннего хранилища (включая пустые элементы!)
         """
-        if len(self) == self.maxlen:
+        if len(self) == self.window:
             yield from self._data[self._index:]
             yield from self._data[:self._index]
         else:

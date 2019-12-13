@@ -38,18 +38,18 @@ class TimeSlice(Carousel):
     """
     __slots__ = ('datetime_index', 'newest', 'minimum_allowed_timestamp')
 
-    def __init__(self, datetime_index: int = 0, maxlen: int = 1, sentinel: Any = object()):
+    def __init__(self, datetime_index: int = 0, window: int = 1, sentinel: Any = object()):
         """
         Создание экземпляра
 
         :param datetime_index: индекс, по которому находится метка времени в блоке данных
-        :param maxlen: ширина среза в секундах, фактически размер окна для анализа
+        :param window: ширина среза в секундах, фактически размер окна для анализа
         :param sentinel: элемент для заполнения пустых ячеек (можно добавить свой)
         """
         self.datetime_index = datetime_index
         self.newest: int = 0
         self.minimum_allowed_timestamp: Optional[int] = None
-        super().__init__(None, maxlen, sentinel)
+        super().__init__(None, window, sentinel)
 
     @property
     def delta(self) -> int:
@@ -95,7 +95,7 @@ class TimeSlice(Carousel):
 
             if element is not self._sentinel:
                 element_time = self.get_seconds(element)
-                if self.newest - element_time > self.maxlen:
+                if self.newest - element_time > self.window:
                     self.minimum_allowed_timestamp = element_time
 
             index += 1

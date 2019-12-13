@@ -37,7 +37,9 @@ def get_git_revision_hash(cmd: str = 'git rev-parse HEAD',
     if response.replace('"', '').replace("'", '').startswith(('git', 'fatal')):
         response = 'unknown'
     else:
-        response = response[:41]
+        # есть риск получить сюда очень большой блок текста в виде
+        # стандартного ответа гита на ввод незнакомой команды
+        response = response[:41].strip()
 
     return response
 

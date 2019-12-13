@@ -13,6 +13,7 @@ def pandas_output(*args, max_rows: int = 100, max_columns: int = 100):
     Распечатать с настройками контекста
     """
     with pd.option_context(
+            'display.min_rows', max_rows,
             'display.max_rows', max_rows,
             'display.max_columns', max_columns,
             'display.expand_frame_repr', False

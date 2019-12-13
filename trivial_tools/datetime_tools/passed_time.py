@@ -8,11 +8,16 @@
 from datetime import timedelta
 from typing import Tuple, Optional
 
+# модули проекта
+from trivial_tools.datetime_tools.basic import cast_seconds_to_timedelta
+
 
 def passed_time(delta: timedelta) -> str:
     """
     Трансформировать timedelta в описание времени в форме '6 дней, 4 часа, 35 минут'
     """
+    delta = cast_seconds_to_timedelta(delta)
+
     weeks, rest_days = form_weeks(delta)
     delta = timedelta(days=rest_days, seconds=delta.seconds)
 

@@ -82,6 +82,8 @@ def byte_count_to_si(total_bytes: int, lang: str = 'RU') -> str:
     >>> byte_count_to_si(1023)
     '1.0 kB'
     """
+    total_bytes = int(total_bytes)
+
     prefix = ''
     if total_bytes < 0:
         prefix = '-'
@@ -122,6 +124,8 @@ def byte_count_to_text(total_bytes: int, lang: str = 'RU') -> str:
     >>> byte_count_to_text(1023)
     '1023 B'
     """
+    total_bytes = int(total_bytes)
+
     prefix = ''
     if total_bytes < 0:
         prefix = '-'

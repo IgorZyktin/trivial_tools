@@ -36,6 +36,8 @@ def get_git_revision_hash(cmd: str = 'git rev-parse HEAD',
 
     if response.replace('"', '').replace("'", '').startswith(('git', 'fatal')):
         response = 'unknown'
+    else:
+        response = response[:41]
 
     return response
 

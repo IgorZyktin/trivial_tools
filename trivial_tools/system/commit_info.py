@@ -25,7 +25,7 @@ def get_git_revision_hash(cmd: str = 'git rev-parse HEAD',
         'aa4d5ef11973828a18425c369e0fdde5fd45c11d'
     """
     pipe = subprocess.Popen(
-        cmd.split(),
+        cmd,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

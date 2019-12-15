@@ -115,10 +115,10 @@ def test_str_long():
     Проверка текстового представления
     """
     c = Carousel(window=40)
-    assert repr(c) == 'Carousel([NULL, NULL, NULL, ..., NULL, NULL, NULL], window=40)'
+    assert str(c) == 'Carousel([], window=40)'
 
     c = Carousel(range(100), window=40)
-    assert repr(c) == 'Carousel([60, 61, 62, ..., 97, 98, 99], window=40)'
+    assert str(c) == 'Carousel([60, 61, 62, ..., 97, 98, 99], len=40, window=40)'
 
 
 def test_repr_long():
@@ -126,10 +126,10 @@ def test_repr_long():
     Проверка текстового представления
     """
     c = Carousel(window=40)
-    assert repr(c) == 'Carousel([NULL, NULL, NULL, ..., NULL, NULL, NULL], window=40)'
+    assert repr(c) == 'Carousel([NULL, NULL, NULL, ..., NULL, NULL, NULL], len=0, window=40)'
 
     c = Carousel(range(100), window=40)
-    assert repr(c) == 'Carousel([60, 61, 62, ..., 97, 98, 99], window=40)'
+    assert repr(c) == 'Carousel([60, 61, 62, ..., 97, 98, 99], len=40, window=40)'
 
 
 def test_resize():

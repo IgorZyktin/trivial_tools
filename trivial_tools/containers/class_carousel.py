@@ -78,24 +78,33 @@ class Carousel:
         """
         Текстовый вид
         """
-        contents = [str(x) for x in self._internals() if x is not self._sentinel]
-        if len(contents) <= 5:
-            string = ', '.join(contents)
-        else:
-            string = ', '.join([*contents[0:3], '...', *contents[-3:]])
-        result = f'{s_type(self)}([{string}], window={self.window})'
-        return result
+        return self.make_str(with_null=False)
 
     def __repr__(self) -> str:
         """
         Текстовый вид
         """
-        contents = [str(x) if x is not self._sentinel else 'NULL' for x in self._internals()]
+        return self.make_str(with_null=True)
+
+    def make_str(self, with_null: bool = False, sep: str = ', ') -> str:
+        """
+        Собрать текстовое представление
+        """
+        contents = []
+
+        for element in self._internals():
+            if element is self._sentinel:
+                if with_null:
+                    contents.append('NULL')
+            else:
+                contents.append(str(element))
+
         if len(contents) <= 5:
-            string = ', '.join(contents)
+            string = sep.join(contents)
+            result = f'{s_type(self)}([{string}], window={self.window})'
         else:
-            string = ', '.join([*contents[0:3], '...', *contents[-3:]])
-        result = f'{s_type(self)}([{string}], window={self.window})'
+            string = sep.join([*contents[0:3], '...', *contents[-3:]])
+            result = f'{s_type(self)}([{string}], len={len(self)}, window={self.window})'
         return result
 
     def populate(self, source: Collection[Any]) -> None:
@@ -114,15 +123,15 @@ class Carousel:
         """
         return self._len
 
-    def increment(self) -> int:
+    def _step_right(self, index: int) -> int:
         """
         Увеличить индекс на единицу и вернуть его значение
         """
-        if self._index < self.window - 1:
-            self._index += 1
+        if index < self.window - 1:
+            index += 1
         else:
-            self._index = 0
-        return self._index
+            index = 0
+        return index
 
     def push(self, element: Any) -> Any:
         """
@@ -136,7 +145,7 @@ class Carousel:
         """
         old_value = self._data[self._index]
         self._data[self._index] = element
-        self.increment()
+        self._index = self._step_right(self._index)
 
         self._len += 1
         if self._len > self.window:

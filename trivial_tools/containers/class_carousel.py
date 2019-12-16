@@ -102,9 +102,11 @@ class Carousel:
         if len(contents) <= 5:
             string = sep.join(contents)
             result = f'{s_type(self)}([{string}], window={self.window})'
+
         else:
             string = sep.join([*contents[0:3], '...', *contents[-3:]])
             result = f'{s_type(self)}([{string}], len={len(self)}, window={self.window})'
+
         return result
 
     def populate(self, source: Collection[Any]) -> None:
@@ -195,7 +197,7 @@ class Carousel:
         """
         Проитерироваться по элементам внутреннего хранилища (включая пустые элементы!)
         """
-        if len(self) == self.window:
+        if self._len == self.window:
             yield from self._data[self._index:]
             yield from self._data[:self._index]
         else:

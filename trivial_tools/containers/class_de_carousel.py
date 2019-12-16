@@ -40,51 +40,6 @@ class DeCarousel(Carousel):
         """
         return item in self._data
 
-    def push(self, element: Any) -> Any:
-        """
-        Добавить элемент в карусель
-
-        Мы замещаем элемент, выталкивая его из списка и возвращаем его. Его значение потом может
-        быть использовано на вызывающей стороне
-
-        :param element: Новый элемент любого типа
-        :return: Старый элемент, который был вытолкнут при добавлении (может оказаться sentinel!)
-        """
-        if self._head == self._tail == -1:
-            # первая вставка элемента
-            old_value = self._data[self._index]
-            self._data[self._index] = element
-
-            self._index = self._step_right(self._index)
-            self._head = self._step_right(self._head)
-            self._tail = self._step_right(self._tail)
-
-        else:
-            # обычная конфигурация
-            old_value = self._data[self._index]
-            self._data[self._index] = element
-
-            if self._index == self._head:
-                # затираем голову
-                self._head = self._step_right(self._head)
-
-            self._index = self._step_right(self._index)
-            self._tail = self._step_right(self._tail)
-
-        if self._head < self._tail:
-            self._len = self._tail - self._head + 1
-
-        elif self._head > self._tail:
-            self._len = self._tail - self._head + 1 + self.window
-
-        elif self._head == -1 and self._tail == -1:
-            self._len = 0
-
-        elif self._head == self._tail:
-            self._len = 1
-
-        return old_value
-
     def _step_right(self, index: int) -> int:
         """
         Шагнуть вправо
@@ -123,20 +78,6 @@ class DeCarousel(Carousel):
             return self._data[self._tail]
         return None
 
-    # def resize(self, new_window: int) -> None:
-    #     """
-    #     Изменить размер карусели
-    #
-    #     :param new_window: новая предельная длина для внутреннего хранилища
-    #     """
-    #     if new_window == self.window:
-    #         return
-    #
-    #     old_data = self.get_contents()
-    #     self.window = new_window
-    #     self.restore()
-    #     self.populate(old_data)
-
     def restore(self) -> None:
         """
         Сбросить индекс и длину, заполнить
@@ -152,13 +93,61 @@ class DeCarousel(Carousel):
         """
         Проитерироваться по элементам внутреннего хранилища (включая пустые элементы!)
         """
-        i = self._head
-        while True:
-            if i == self._tail:
-                break
-            yield self._data[i]
-            i = self._step_right(i)
-        yield self._data[self._tail]
+        if self._head == -1 and self._tail == -1:
+            yield from self._data
+
+        else:
+            i = self._head
+            while True:
+                if i == self._tail:
+                    break
+                yield self._data[i]
+                i = self._step_right(i)
+            yield self._data[self._tail]
+
+    def update_len(self) -> None:
+        """
+        Пересчитать длину коллекции
+        """
+        if self._head < self._tail:
+            self._len = self._tail - self._head + 1
+
+        elif self._head > self._tail:
+            self._len = self._tail - self._head + 1 + self.window
+
+        elif self._head == self._tail:
+            self._len = 1
+
+    def push(self, item: Any) -> Any:
+        """
+        Добавить элемент в карусель
+
+        Мы замещаем элемент, выталкивая его из списка и возвращаем его. Его значение потом может
+        быть использовано на вызывающей стороне
+
+        :param item: Новый элемент любого типа
+        :return: Старый элемент, который был вытолкнут при добавлении (может оказаться sentinel!)
+        """
+        old_value = self._data[self._index]
+        self._data[self._index] = item
+
+        if self._head == self._tail == -1:
+            # первая вставка элемента
+            self._index = self._step_right(self._index)
+            self._head = self._step_right(self._head)
+            self._tail = self._step_right(self._tail)
+
+        else:
+            # обычная конфигурация
+            if self._index == self._head:
+                # затираем голову
+                self._head = self._step_right(self._head)
+
+            self._index = self._step_right(self._index)
+            self._tail = self._step_right(self._tail)
+
+        self.update_len()
+        return old_value
 
     def append(self, item: Any) -> None:
         """
@@ -171,7 +160,7 @@ class DeCarousel(Carousel):
         """
         Извлечь элемент справа
         """
-        if len(self) == 0:
+        if self._len == 0:
             fail(f'Попытка извлечь элемент из пустой коллекции: {self}', reason=IndexError)
 
         value = self._data[self._tail]
@@ -185,13 +174,28 @@ class DeCarousel(Carousel):
         """
         Добавить элемент слева
         """
-        raise NotImplementedError
+        if self._head == self._tail == -1:
+            # первая вставка элемента
+            self._data[-1] = item
+            self._index = 0
+            self._head = len(self._data) - 1
+            self._tail = len(self._data) - 1
+
+        else:
+            # обычная конфигурация
+            self._head = self._step_left(self._head)
+            if self._head == self._tail:
+                self._tail = self._step_left(self._tail)
+
+            self._data[self._head] = item
+
+        self.update_len()
 
     def popleft(self) -> Any:
         """
         Извлечь элемент слева
         """
-        if len(self) == 0:
+        if self._len == 0:
             fail(f'Попытка извлечь элемент из пустой коллекции: {self}', reason=IndexError)
 
         value = self._data[self._head]
@@ -199,59 +203,3 @@ class DeCarousel(Carousel):
         self._head = self._step_right(self._head)
         self._len -= 1
         return value
-
-
-    # def __getitem__(self, item: Union[int, slice]) -> Any:
-    #     """
-    #     Обратиться к элементу по индексу.
-    #     Обеспечивается обычный доступ к внутреннему хранилищу, просто со смещением индекса
-    #
-    #     :param item: ключ индексации
-    #     :return: содержимое внутреннего хранилища
-    #     """
-    #     if isinstance(item, int):
-    #         if not self._len:
-    #             fail(f'Попытка получить элемент из пустого объекта {s_type(self)}',
-    #                  reason=IndexError)
-    #
-    #         result = self._data[self.get_real_index(item)]
-    #
-    #         if result is self._sentinel:
-    #             fail(f'В экземпляре {s_type(self)} нет элемента с индексом {item!r}',
-    #                  reason=IndexError)
-    #
-    #         return result
-    #
-    #     if isinstance(item, slice):
-    #         return self.get_contents()[item]
-    #
-    #     fail(f"Тип {s_type(self)} поддерживает работу только с индексами int и slice!",
-    #          reason=IndexError)
-    #
-    # def __setitem__(self, key: Union[int, slice], value: Any) -> None:
-    #     """
-    #     Записать элемент по индексу.
-    #     Обеспечивается обычный доступ к внутреннему хранилищу, просто со смещением индекса
-    #
-    #     :param key: ключ индексации, только int
-    #     :param value: данные для записи (любой тип)
-    #     """
-    #     if not isinstance(key, int):
-    #         fail(f"Тип {s_type(self)} поддерживает работу только с индексами типа int!",
-    #              reason=IndexError)
-    #
-    #     if not self._len:
-    #         fail(f'Попытка присвоить элемент по индексу {key} в пустой объект {s_type(self)}',
-    #              reason=IndexError)
-    #
-    #     self._data[self.get_real_index(key)] = value
-    #     return
-    #
-    # def get_real_index(self, key: int) -> int:
-    #     """
-    #     Настояшее положение ячеек, с учётом их сдвига
-    #     """
-    #     index = self._index + key
-    #     if index > self._len - 1:
-    #         index -= self._len
-    #     return index

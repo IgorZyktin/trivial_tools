@@ -39,37 +39,22 @@ def test_creation():
     assert d.extract() == []
 
 
-def test_push():
+def test_contains():
     """
-    Проверка добавления элемента
+    Проверка наличия элемента
     """
-    maxlen = 3
-    d = DeCarousel(window=maxlen, sentinel=None)
-    assert d.get_contents() == []
+    d = DeCarousel(window=2)
+    assert 0 not in d
+    assert 4 not in d
 
-    x = d.push(1)
-    assert d.get_contents() == [1]
-    assert x is None
+    d.populate([1, 2, 3])
+    assert d.get_contents() == [2, 3]
 
-    x = d.push(2)
-    assert d.get_contents() == [1, 2]
-    assert x is None
-
-    x = d.push(3)
-    assert d.get_contents() == [1, 2, 3]
-    assert x is None
-
-    x = d.push(4)
-    assert d.get_contents() == [2, 3, 4]
-    assert x == 1
-
-    x = d.push(5)
-    assert d.get_contents() == [3, 4, 5]
-    assert x == 2
-
-    x = d.push(6)
-    assert d.get_contents() == [4, 5, 6]
-    assert x == 3
+    assert 0 not in d
+    assert 1 not in d
+    assert 2 in d
+    assert 3 in d
+    assert 4 not in d
 
 
 def test_len():
@@ -124,15 +109,58 @@ def test_str_long():
     assert str(d) == 'DeCarousel([60, 61, 62, ..., 97, 98, 99], len=40, window=40)'
 
 
+def test_repr():
+    """
+    Проверка текстового представления
+    """
+    d = DeCarousel(window=3)
+    assert repr(d) == 'DeCarousel([NULL, NULL, NULL], window=3)'
+
+    d = DeCarousel(range(100), window=3)
+    assert repr(d) == 'DeCarousel([97, 98, 99], window=3)'
+
+
 def test_repr_long():
     """
     Проверка текстового представления
     """
     d = DeCarousel(window=40)
-    assert repr(d) == 'DeCarousel([NULL], window=40)'
+    assert repr(d) == 'DeCarousel([NULL, NULL, NULL, ..., NULL, NULL, NULL], len=0, window=40)'
 
     d = DeCarousel(range(100), window=40)
     assert repr(d) == 'DeCarousel([60, 61, 62, ..., 97, 98, 99], len=40, window=40)'
+
+
+def test_push():
+    """
+    Проверка добавления элемента
+    """
+    d = DeCarousel(window=3, sentinel=None)
+    assert d.get_contents() == []
+
+    x = d.push(1)
+    assert d.get_contents() == [1]
+    assert x is None
+
+    x = d.push(2)
+    assert d.get_contents() == [1, 2]
+    assert x is None
+
+    x = d.push(3)
+    assert d.get_contents() == [1, 2, 3]
+    assert x is None
+
+    x = d.push(4)
+    assert d.get_contents() == [2, 3, 4]
+    assert x == 1
+
+    x = d.push(5)
+    assert d.get_contents() == [3, 4, 5]
+    assert x == 2
+
+    x = d.push(6)
+    assert d.get_contents() == [4, 5, 6]
+    assert x == 3
 
 
 def test_append():
@@ -144,46 +172,55 @@ def test_append():
 
     d.append(1)
     assert d.get_contents() == [1]
+    assert len(d) == 1
     assert d.left == 1
     assert d.right == 1
 
     d.append(2)
     assert d.get_contents() == [1, 2]
+    assert len(d) == 2
     assert d.left == 1
     assert d.right == 2
 
     d.append(3)
     assert d.get_contents() == [1, 2, 3]
+    assert len(d) == 3
     assert d.left == 1
     assert d.right == 3
 
     d.append(4)
     assert d.get_contents() == [1, 2, 3, 4]
+    assert len(d) == 4
     assert d.left == 1
     assert d.right == 4
 
     d.append(5)
     assert d.get_contents() == [2, 3, 4, 5]
+    assert len(d) == 4
     assert d.left == 2
     assert d.right == 5
 
     d.append(6)
     assert d.get_contents() == [3, 4, 5, 6]
+    assert len(d) == 4
     assert d.left == 3
     assert d.right == 6
 
     d.append(7)
     assert d.get_contents() == [4, 5, 6, 7]
+    assert len(d) == 4
     assert d.left == 4
     assert d.right == 7
 
     d.append(8)
     assert d.get_contents() == [5, 6, 7, 8]
+    assert len(d) == 4
     assert d.left == 5
     assert d.right == 8
 
     d.append(9)
     assert d.get_contents() == [6, 7, 8, 9]
+    assert len(d) == 4
     assert d.left == 6
     assert d.right == 9
 
@@ -192,11 +229,53 @@ def test_appendleft():
     """
     Проверка добавления элемента
     """
-    d = DeCarousel(window=4)
+    d = DeCarousel(window=4, sentinel=None)
     assert len(d) == 0
 
-    with pytest.raises(NotImplementedError):
-        d.appendleft(1)
+    d.appendleft(1)
+    assert d.get_contents() == [1]
+    assert d.left == 1
+    assert d.right == 1
+
+    d.appendleft(2)
+    assert d.get_contents() == [2, 1]
+    assert d.left == 2
+    assert d.right == 1
+
+    d.appendleft(3)
+    assert d.get_contents() == [3, 2, 1]
+    assert d.left == 3
+    assert d.right == 1
+
+    d.appendleft(4)
+    assert d.get_contents() == [4, 3, 2, 1]
+    assert d.left == 4
+    assert d.right == 1
+
+    d.appendleft(5)
+    assert d.get_contents() == [5, 4, 3, 2]
+    assert d.left == 5
+    assert d.right == 2
+
+    d.appendleft(6)
+    assert d.get_contents() == [6, 5, 4, 3]
+    assert d.left == 6
+    assert d.right == 3
+
+    d.appendleft(7)
+    assert d.get_contents() == [7, 6, 5, 4]
+    assert d.left == 7
+    assert d.right == 4
+
+    d.appendleft(8)
+    assert d.get_contents() == [8, 7, 6, 5]
+    assert d.left == 8
+    assert d.right == 5
+
+    d.appendleft(9)
+    assert d.get_contents() == [9, 8, 7, 6]
+    assert d.left == 9
+    assert d.right == 6
 
 
 def test_pop():
@@ -228,68 +307,104 @@ def test_pop():
     assert d.left is None
     assert d.right is None
 
+    with pytest.raises(IndexError):
+        d.pop()
 
-# def test_resize():
-#     """
-#     Проверка изменения размера
-#     """
-#     c = Carousel([1, 2, 3], window=2)
-#     assert len(c) == 2
-#     assert c.window == 2
-#     assert c.get_contents() == [2, 3]
-#
-#     assert repr(c) == 'Carousel([2, 3], window=2)'
-#     c.resize(5)
-#     assert repr(c) == 'Carousel([2, 3, NULL, NULL, NULL], window=5)'
-#
-#     c.push(4)
-#     c.push(5)
-#
-#     assert len(c) == 4
-#     assert c.window == 5
-#     assert c.get_contents() == [2, 3, 4, 5]
-#     assert repr(c) == 'Carousel([2, 3, 4, 5, NULL], window=5)'
-#
-#     c.push(6)
-#
-#     assert len(c) == 5
-#     assert c.window == 5
-#     assert c.get_contents() == [2, 3, 4, 5, 6]
-#     assert repr(c) == 'Carousel([2, 3, 4, 5, 6], window=5)'
-#
-#     c.resize(2)
-#     assert repr(c) == 'Carousel([5, 6], window=2)'
-#
-#     assert len(c) == 2
-#     assert c.window == 2
-#     assert c.get_contents() == [5, 6]
-#
-#
-# def test_resize_empty():
-#     """
-#     Проверка изменения размера пустой карусели
-#     """
-#     c = Carousel(window=2)
-#     assert c.window == 2
-#     assert repr(c) == 'Carousel([NULL, NULL], window=2)'
-#
-#     c.resize(5)
-#     assert c.window == 5
-#     assert repr(c) == 'Carousel([NULL, NULL, NULL, NULL, NULL], window=5)'
-#
-#     c.resize(3)
-#     assert c.window == 3
-#     assert repr(c) == 'Carousel([NULL, NULL, NULL], window=3)'
-#
-#
-# def test_no_resize():
-#     """
-#     Проверка изменения размера при том же значении
-#     """
-#     c = Carousel(window=2)
-#     assert c.window == 2
-#     c.resize(c.window)
-#     assert c.window == 2
+    assert len(d) == 0
+
+
+def test_popleft():
+    """
+    Проверка извлечения элемента
+    """
+    d = DeCarousel([1, 2, 3, 4, 5, 6, 7, 8, 9], window=4)
+    assert d.get_contents() == [6, 7, 8, 9]
+    assert d.left == 6
+    assert d.right == 9
+
+    x = d.popleft()
+    assert x == 6
+    assert d.left == 7
+    assert d.right == 9
+
+    x = d.popleft()
+    assert x == 7
+    assert d.left == 8
+    assert d.right == 9
+
+    x = d.popleft()
+    assert x == 8
+    assert d.left == 9
+    assert d.right == 9
+
+    x = d.popleft()
+    assert x == 9
+    assert d.left is None
+    assert d.right is None
+
+    with pytest.raises(IndexError):
+        d.popleft()
+
+    assert len(d) == 0
+
+
+def test_resize():
+    """
+    Проверка изменения размера
+    """
+    d = DeCarousel([1, 2, 3], window=2)
+    assert len(d) == 2
+    assert d.window == 2
+    assert d.get_contents() == [2, 3]
+
+    d.resize(5)
+
+    d.push(4)
+    d.push(5)
+
+    assert len(d) == 4
+    assert d.window == 5
+    assert d.get_contents() == [2, 3, 4, 5]
+
+    d.push(6)
+
+    assert len(d) == 5
+    assert d.window == 5
+    assert d.get_contents() == [2, 3, 4, 5, 6]
+
+    d.resize(2)
+
+    assert len(d) == 2
+    assert d.window == 2
+    assert d.get_contents() == [5, 6]
+
+
+def test_resize_empty():
+    """
+    Проверка изменения размера пустой карусели
+    """
+    d = DeCarousel(window=2)
+    assert d.window == 2
+    assert repr(d) == 'DeCarousel([NULL, NULL], window=2)'
+
+    d.resize(5)
+    assert d.window == 5
+    assert repr(d) == 'DeCarousel([NULL, NULL, NULL, NULL, NULL], window=5)'
+
+    d.resize(3)
+    assert d.window == 3
+    assert repr(d) == 'DeCarousel([NULL, NULL, NULL], window=3)'
+
+
+def test_no_resize():
+    """
+    Проверка изменения размера при том же значении
+    """
+    d = DeCarousel(window=2)
+    assert d.window == 2
+
+    d.resize(d.window)
+    assert d.window == 2
 
 
 def test_iter():
@@ -305,210 +420,210 @@ def test_iter():
     assert base == [1, 2, 3]
 
 
-# def test_getitem_int():
-#     """
-#     Проверка обращения к элементу (целое как индекс)
-#     """
-#     c = Carousel(window=4)
-#
-#     with pytest.raises(IndexError):
-#         assert c[0]
-#
-#     with pytest.raises(IndexError):
-#         # noinspection PyTypeChecker
-#         assert c['test']
-#
-#     c.push(1)
-#     assert c[0] == 1
-#     assert c[-1] == 1
-#
-#     with pytest.raises(IndexError):
-#         assert c[2]
-#
-#     c.push(2)
-#     assert c[0] == 1
-#     assert c[1] == 2
-#     assert c[-1] == 2
-#     assert c[-2] == 1
-#
-#     c.push(3)
-#     assert c[0] == 1
-#     assert c[1] == 2
-#     assert c[2] == 3
-#     assert c[-1] == 3
-#     assert c[-2] == 2
-#     assert c[-3] == 1
-#
-#     c.push(4)
-#     assert c[0] == 1
-#     assert c[1] == 2
-#     assert c[2] == 3
-#     assert c[3] == 4
-#     assert c[-1] == 4
-#     assert c[-2] == 3
-#     assert c[-3] == 2
-#     assert c[-4] == 1
-#
-#     c.push(5)
-#     assert c[0] == 2
-#     assert c[1] == 3
-#     assert c[2] == 4
-#     assert c[3] == 5
-#     assert c[-1] == 5
-#     assert c[-2] == 4
-#     assert c[-3] == 3
-#     assert c[-4] == 2
-#
-#     c.push(6)
-#     assert c[0] == 3
-#     assert c[1] == 4
-#     assert c[2] == 5
-#     assert c[3] == 6
-#     assert c[-1] == 6
-#     assert c[-2] == 5
-#     assert c[-3] == 4
-#     assert c[-4] == 3
-#
-#     c.push(7)
-#     assert c[0] == 4
-#     assert c[1] == 5
-#     assert c[2] == 6
-#     assert c[3] == 7
-#     assert c[-1] == 7
-#     assert c[-2] == 6
-#     assert c[-3] == 5
-#     assert c[-4] == 4
-#
-#     c.push(8)
-#     assert c[0] == 5
-#     assert c[1] == 6
-#     assert c[2] == 7
-#     assert c[3] == 8
-#     assert c[-1] == 8
-#     assert c[-2] == 7
-#     assert c[-3] == 6
-#     assert c[-4] == 5
-#
-#
-# def test_getitem_slice():
-#     """
-#     Проверка обращения к элементу (срез как индекс)
-#     """
-#     c = Carousel(window=4)
-#
-#     assert c[:] == []
-#
-#     for i in range(1, 9):
-#         c.push(i)
-#
-#     assert c[0] == 5
-#     assert c[1] == 6
-#     assert c[2] == 7
-#     assert c[3] == 8
-#
-#     assert c[:] == [5, 6, 7, 8]
-#
-#     assert c[:4] == [5, 6, 7, 8]
-#     assert c[:3] == [5, 6, 7]
-#     assert c[:2] == [5, 6]
-#     assert c[:1] == [5]
-#
-#     assert c[1:] == [6, 7, 8]
-#     assert c[2:] == [7, 8]
-#     assert c[3:] == [8]
-#     assert c[4:] == []
-#
-#     c.push(9)
-#
-#     assert c[:] == [6, 7, 8, 9]
-#
-#     assert c[:4] == [6, 7, 8, 9]
-#     assert c[:3] == [6, 7, 8]
-#     assert c[:2] == [6, 7]
-#     assert c[:1] == [6]
-#
-#     assert c[1:] == [7, 8, 9]
-#     assert c[2:] == [8, 9]
-#     assert c[3:] == [9]
-#     assert c[4:] == []
-#
-#     c.push(10)
-#
-#     assert c[:] == [7, 8, 9, 10]
-#
-#     assert c[1:] == [8, 9, 10]
-#     assert c[2:] == [9, 10]
-#     assert c[3:] == [10]
-#     assert c[4:] == []
-#
-#     assert c[0:3:2] == [7, 9]
-#
-#
-# def test_setitem_int():
-#     """
-#     Проверка подмены элемента
-#     """
-#     c = Carousel(window=3)
-#
-#     with pytest.raises(IndexError):
-#         c[0] = 1
-#
-#     c.push(1)
-#     c.push(2)
-#     c.push(3)
-#     c.push(4)
-#     c.push(5)
-#     c.push(6)
-#
-#     assert c[0] == 4
-#     assert c[1] == 5
-#     assert c[2] == 6
-#
-#     assert c[-1] == 6
-#     assert c[-2] == 5
-#     assert c[-3] == 4
-#
-#     assert c[:] == [4, 5, 6]
-#
-#     c[0] = 9
-#     assert c[0] == 9
-#     assert c[1] == 5
-#     assert c[2] == 6
-#
-#     c[1] = 7
-#     assert c[0] == 9
-#     assert c[1] == 7
-#     assert c[2] == 6
-#
-#     c[2] = 4
-#     assert c[0] == 9
-#     assert c[1] == 7
-#     assert c[2] == 4
-#
-#     c[-1] = 78
-#     assert c[0] == 9
-#     assert c[1] == 7
-#     assert c[2] == 78
-#
-#     with pytest.raises(IndexError):
-#         c[75] = 6
-#
-#
-# def test_setitem_slice():
-#     """
-#     Проверка подмены элемента
-#     """
-#     c = Carousel(window=4)
-#
-#     with pytest.raises(IndexError):
-#         c[:] = [9, 8, 7, 6]
-#
-#
-# def test_is_sentinel():
-#     """
-#     Проверка выдачи пустого элемента
-#     """
-#     c = Carousel(window=2)
-#
-#     with pytest.raises(IndexError):
-#         _ = c[0]
+def test_getitem_int():
+    """
+    Проверка обращения к элементу (целое как индекс)
+    """
+    d = DeCarousel(window=4)
+
+    with pytest.raises(IndexError):
+        assert d[0]
+
+    with pytest.raises(IndexError):
+        # noinspection PyTypeChecker
+        assert d['test']
+
+    d.push(1)
+    assert d[0] == 1
+    assert d[-1] == 1
+
+    with pytest.raises(IndexError):
+        assert d[2]
+
+    d.push(2)
+    assert d[0] == 1
+    assert d[1] == 2
+    assert d[-1] == 2
+    assert d[-2] == 1
+
+    d.push(3)
+    assert d[0] == 1
+    assert d[1] == 2
+    assert d[2] == 3
+    assert d[-1] == 3
+    assert d[-2] == 2
+    assert d[-3] == 1
+
+    d.push(4)
+    assert d[0] == 1
+    assert d[1] == 2
+    assert d[2] == 3
+    assert d[3] == 4
+    assert d[-1] == 4
+    assert d[-2] == 3
+    assert d[-3] == 2
+    assert d[-4] == 1
+
+    d.push(5)
+    assert d[0] == 2
+    assert d[1] == 3
+    assert d[2] == 4
+    assert d[3] == 5
+    assert d[-1] == 5
+    assert d[-2] == 4
+    assert d[-3] == 3
+    assert d[-4] == 2
+
+    d.push(6)
+    assert d[0] == 3
+    assert d[1] == 4
+    assert d[2] == 5
+    assert d[3] == 6
+    assert d[-1] == 6
+    assert d[-2] == 5
+    assert d[-3] == 4
+    assert d[-4] == 3
+
+    d.push(7)
+    assert d[0] == 4
+    assert d[1] == 5
+    assert d[2] == 6
+    assert d[3] == 7
+    assert d[-1] == 7
+    assert d[-2] == 6
+    assert d[-3] == 5
+    assert d[-4] == 4
+
+    d.push(8)
+    assert d[0] == 5
+    assert d[1] == 6
+    assert d[2] == 7
+    assert d[3] == 8
+    assert d[-1] == 8
+    assert d[-2] == 7
+    assert d[-3] == 6
+    assert d[-4] == 5
+
+
+def test_getitem_slice():
+    """
+    Проверка обращения к элементу (срез как индекс)
+    """
+    d = DeCarousel(window=4)
+
+    assert d[:] == []
+
+    for i in range(1, 9):
+        d.push(i)
+
+    assert d[0] == 5
+    assert d[1] == 6
+    assert d[2] == 7
+    assert d[3] == 8
+
+    assert d[:] == [5, 6, 7, 8]
+
+    assert d[:4] == [5, 6, 7, 8]
+    assert d[:3] == [5, 6, 7]
+    assert d[:2] == [5, 6]
+    assert d[:1] == [5]
+
+    assert d[1:] == [6, 7, 8]
+    assert d[2:] == [7, 8]
+    assert d[3:] == [8]
+    assert d[4:] == []
+
+    d.push(9)
+
+    assert d[:] == [6, 7, 8, 9]
+
+    assert d[:4] == [6, 7, 8, 9]
+    assert d[:3] == [6, 7, 8]
+    assert d[:2] == [6, 7]
+    assert d[:1] == [6]
+
+    assert d[1:] == [7, 8, 9]
+    assert d[2:] == [8, 9]
+    assert d[3:] == [9]
+    assert d[4:] == []
+
+    d.push(10)
+
+    assert d[:] == [7, 8, 9, 10]
+
+    assert d[1:] == [8, 9, 10]
+    assert d[2:] == [9, 10]
+    assert d[3:] == [10]
+    assert d[4:] == []
+
+    assert d[0:3:2] == [7, 9]
+
+
+def test_setitem_int():
+    """
+    Проверка подмены элемента
+    """
+    d = DeCarousel(window=3)
+
+    with pytest.raises(IndexError):
+        d[0] = 1
+
+    d.push(1)
+    d.push(2)
+    d.push(3)
+    d.push(4)
+    d.push(5)
+    d.push(6)
+
+    assert d[0] == 4
+    assert d[1] == 5
+    assert d[2] == 6
+
+    assert d[-1] == 6
+    assert d[-2] == 5
+    assert d[-3] == 4
+
+    assert d[:] == [4, 5, 6]
+
+    d[0] = 9
+    assert d[0] == 9
+    assert d[1] == 5
+    assert d[2] == 6
+
+    d[1] = 7
+    assert d[0] == 9
+    assert d[1] == 7
+    assert d[2] == 6
+
+    d[2] = 4
+    assert d[0] == 9
+    assert d[1] == 7
+    assert d[2] == 4
+
+    d[-1] = 78
+    assert d[0] == 9
+    assert d[1] == 7
+    assert d[2] == 78
+
+    with pytest.raises(IndexError):
+        d[75] = 6
+
+
+def test_setitem_slice():
+    """
+    Проверка подмены элемента
+    """
+    d = DeCarousel(window=4)
+
+    with pytest.raises(IndexError):
+        d[:] = [9, 8, 7, 6]
+
+
+def test_no_element():
+    """
+    Проверка выдачи пустого элемента
+    """
+    d = DeCarousel(window=2)
+
+    with pytest.raises(IndexError):
+        _ = d[0]

@@ -201,5 +201,9 @@ class DeCarousel(Carousel):
         value = self._data[self._head]
         self._data[self._head] = self._sentinel
         self._head = self._step_right(self._head)
+        self._index = self._step_right(self._index)
         self._len -= 1
+
+        if self._len == 0:
+            self.restore()
         return value

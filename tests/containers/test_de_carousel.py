@@ -137,30 +137,37 @@ def test_push():
     """
     d = DeCarousel(window=3, sentinel=None)
     assert d.get_contents() == []
+    assert len(d) == 0
 
     x = d.push(1)
     assert d.get_contents() == [1]
     assert x is None
+    assert len(d) == 1
 
     x = d.push(2)
     assert d.get_contents() == [1, 2]
     assert x is None
+    assert len(d) == 2
 
     x = d.push(3)
     assert d.get_contents() == [1, 2, 3]
     assert x is None
+    assert len(d) == 3
 
     x = d.push(4)
     assert d.get_contents() == [2, 3, 4]
     assert x == 1
+    assert len(d) == 3
 
     x = d.push(5)
     assert d.get_contents() == [3, 4, 5]
     assert x == 2
+    assert len(d) == 3
 
     x = d.push(6)
     assert d.get_contents() == [4, 5, 6]
     assert x == 3
+    assert len(d) == 3
 
 
 def test_append():
@@ -627,3 +634,106 @@ def test_no_element():
 
     with pytest.raises(IndexError):
         _ = d[0]
+
+
+def test_push_and_pop():
+    """
+    Проверка добавления с извлечением
+    """
+    d = DeCarousel(window=4, sentinel=None)
+    assert len(d) == 0
+    assert d._index == 0
+    assert d._head == -1
+    assert d._tail == -1
+    assert d.get_contents() == []
+    assert d._data == [None, None, None, None]
+    assert d.left is None
+    assert d.right is None
+
+    d.push(1)
+    assert d._index == 1
+    assert d._head == 0
+    assert d._tail == 0
+    assert d.get_contents() == [1]
+    assert d._data == [1, None, None, None]
+    assert d.left == 1
+    assert d.right == 1
+
+    d.push(2)
+    assert d._index == 2
+    assert d._head == 0
+    assert d._tail == 1
+    assert d.get_contents() == [1, 2]
+    assert d._data == [1, 2, None, None]
+    assert d.left == 1
+    assert d.right == 2
+
+    d.push(3)
+    assert d._index == 3
+    assert d._head == 0
+    assert d._tail == 2
+    assert d.get_contents() == [1, 2, 3]
+    assert d._data == [1, 2, 3, None]
+    assert d.left == 1
+    assert d.right == 3
+
+    d.push(4)
+    assert d._index == 0
+    assert d._head == 0
+    assert d._tail == 3
+    assert d.get_contents() == [1, 2, 3, 4]
+    assert d._data == [1, 2, 3, 4]
+    assert d.left == 1
+    assert d.right == 4
+
+    d.push(5)
+    assert d._index == 1
+    assert d._head == 1
+    assert d._tail == 0
+    assert d.get_contents() == [2, 3, 4, 5]
+    assert d._data == [5, 2, 3, 4]
+    assert d.left == 2
+    assert d.right == 5
+
+    d.push(6)
+    assert d._index == 2
+    assert d._head == 2
+    assert d._tail == 1
+    assert d.get_contents() == [3, 4, 5, 6]
+    assert d._data == [5, 6, 3, 4]
+    assert d.left == 3
+    assert d.right == 6
+
+    assert d.popleft() == 3
+    assert d._index == 3
+    assert d._head == 3
+    assert d._tail == 1
+    assert d.get_contents() == [4, 5, 6]
+    assert d._data == [5, 6, None, 4]
+    assert d.left == 4
+    assert d.right == 6
+    assert len(d) == 3
+
+    assert d.popleft() == 4
+    assert d._index == 0
+    assert d._head == 0
+    assert d._tail == 1
+    assert d.get_contents() == [5, 6]
+    assert d._data == [5, 6, None, None]
+    assert len(d) == 2
+
+    assert d.popleft() == 5
+    assert d._index == 1
+    assert d._head == 1
+    assert d._tail == 1
+    assert d.get_contents() == [6]
+    assert d._data == [None, 6, None, None]
+    assert len(d) == 1
+
+    assert d.popleft() == 6
+    assert d._index == 0
+    assert d._head == -1
+    assert d._tail == -1
+    assert d.get_contents() == []
+    assert d._data == [None, None, None, None]
+    assert len(d) == 0

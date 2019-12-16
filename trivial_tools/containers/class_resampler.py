@@ -92,14 +92,14 @@ class Resampler:
         """
         # ----------------- Первичная инициализация, мы пока не можем считать
         if not payload:
-            return
+            return None
 
         payload = list(payload)
 
         # у нас нет старого значения, берём это без проверки
         if self.previous is None:
             self.previous = payload
-            return
+            return None
 
         new_seconds = self.get_seconds(payload)
         old_seconds = self.get_seconds(self.previous)
@@ -107,11 +107,11 @@ class Resampler:
         if new_seconds == old_seconds:
             # при равенстве мы всё-равно замещаем старые показания новыми
             self.previous = payload
-            return
+            return None
 
         if new_seconds < old_seconds:
             # это значение слишком старое
-            return
+            return None
 
         old_moment = self.previous[self.datetime_index]
         delta = new_seconds - old_seconds

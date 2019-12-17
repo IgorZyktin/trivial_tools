@@ -102,6 +102,10 @@ def start_working(folder_name: str, config_name: Optional[str], func: Callable,
         try:
             message = func(config)
             logger.warning(message)
+
+            if message == 'stop':
+                break
+
         except KeyboardInterrupt:
             logger.warning('\nОстановка по команде с клавиатуры!')
             break

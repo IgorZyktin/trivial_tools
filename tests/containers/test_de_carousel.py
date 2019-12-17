@@ -720,6 +720,8 @@ def test_push_and_pop():
     assert d._tail == 1
     assert d.get_contents() == [5, 6]
     assert d._data == [5, 6, None, None]
+    assert d.left == 5
+    assert d.right == 6
     assert len(d) == 2
 
     assert d.popleft() == 5
@@ -728,6 +730,8 @@ def test_push_and_pop():
     assert d._tail == 1
     assert d.get_contents() == [6]
     assert d._data == [None, 6, None, None]
+    assert d.left == 6
+    assert d.right == 6
     assert len(d) == 1
 
     assert d.popleft() == 6
@@ -736,4 +740,16 @@ def test_push_and_pop():
     assert d._tail == -1
     assert d.get_contents() == []
     assert d._data == [None, None, None, None]
+    assert d.left is None
+    assert d.right is None
     assert len(d) == 0
+
+    d.push(7)
+    assert d._index == 1
+    assert d._head == 0
+    assert d._tail == 0
+    assert d.get_contents() == [7]
+    assert d._data == [7, None, None, None]
+    assert d.left == 7
+    assert d.right == 7
+    assert len(d) == 1

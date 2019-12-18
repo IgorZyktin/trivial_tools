@@ -7,7 +7,7 @@
 # встроенные модули
 import calendar
 from typing import Union
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
 def cast_seconds_to_timedelta(value: Union[timedelta, int, float]) -> timedelta:
@@ -50,3 +50,17 @@ def hours_in_month(year: int, month: int) -> int:
     """
     result = days_in_month(year, month) * 24
     return result
+
+
+def get_seconds_diff(old: datetime, new: datetime) -> float:
+    """
+    Получить число секунд между метками
+    """
+    return (new - old).total_seconds()
+
+
+def get_seconds_diff_int(old: datetime, new: datetime) -> int:
+    """
+    Получить число секунд между метками
+    """
+    return int(get_seconds_diff(old, new))

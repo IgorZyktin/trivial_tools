@@ -5,7 +5,8 @@
 
 """
 # встроенные модули
-from typing import NoReturn, Optional, Type
+from itertools import zip_longest
+from typing import NoReturn, Optional, Type, Sequence, Callable, List, Any
 
 # модули проекта
 from trivial_tools.formatters.base import decorate
@@ -36,3 +37,26 @@ def fail(message: str, reason: Type[Exception] = RuntimeError,
     # В настоящий момент (python 3.7) нет способа корректно указать исключения в аннотациях типов.
     # noinspection PyCallingNonCallable
     raise reason(decorate(f'{name}: {message}'))
+
+
+def group_cast(elements: Sequence, *casters: Callable) -> Sequence[Any]:
+    """Выполнить групповое преобразование типа.
+
+    Может сэкономить немного места на конверсиях.
+
+    :param elements: последовательность элементов для преобразования.
+    :param casters: последовательность типов или функций для преобразования
+    :return: список преобразованных элементов
+    """
+    if not casters:
+        return elements
+
+    elif casters[-1] != Ellipsis and len(casters) == len(elements):
+        return [func(val) for func, val in zip(casters, elements)]
+
+    elif casters[-1] == Ellipsis and len(casters) >= len(elements) - 1 and len(casters) >= 2:
+        return [func(val) for func, val in
+                zip_longest(casters[:-1], elements, fillvalue=casters[-2])]
+
+    fail(f'Количество преобразователей ({len(casters)}) не '
+         f'совпадает с количеством аргументов ({len(elements)})!', reason=ValueError)

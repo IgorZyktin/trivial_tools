@@ -39,7 +39,7 @@ def fail(message: str, reason: Type[Exception] = RuntimeError,
     raise reason(decorate(f'{name}: {message}'))
 
 
-def group_cast(elements: Sequence, *casters: Callable) -> Sequence[Any]:
+def group_cast(elements: Sequence, *casters: Callable) -> List[Any]:
     """Выполнить групповое преобразование типа.
 
     Может сэкономить немного места на конверсиях.
@@ -49,12 +49,12 @@ def group_cast(elements: Sequence, *casters: Callable) -> Sequence[Any]:
     :return: список преобразованных элементов
     """
     if not casters:
-        return elements
+        return list(elements)
 
     elif casters[-1] != Ellipsis and len(casters) == len(elements):
         return [func(val) for func, val in zip(casters, elements)]
 
-    elif casters[-1] == Ellipsis and len(casters) >= len(elements) - 1 and len(casters) >= 2:
+    elif casters[-1] == Ellipsis and len(casters) >= 2:
         return [func(val) for func, val in
                 zip_longest(casters[:-1], elements, fillvalue=casters[-2])]
 

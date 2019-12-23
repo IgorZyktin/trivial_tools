@@ -34,9 +34,24 @@ def form_request(method_name: str, request_id: Optional[int] = None, **kwargs) -
     return request
 
 
+# TODO - deprecate this
 def form_valid_response(result: Any, request_id: Optional[int] = None) -> Dict[str, Any]:
     """
     Собрать ответ из API
     """
     response = {"jsonrpc": "2.0", "result": result, "id": request_id}
     return response
+
+
+def result(output: Any, request_id: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Успешный результат
+    """
+    return {"jsonrpc": "2.0", "result": output, "id": request_id}
+
+
+def error(output: str, request_id: Optional[int] = None) -> Dict[str, Any]:
+    """
+    Неудачный результат
+    """
+    return {"jsonrpc": "2.0", "error": output, "id": request_id}

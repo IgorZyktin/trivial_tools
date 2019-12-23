@@ -4,13 +4,15 @@
     Базовый класс для управления конфигурациями
 
 """
-# модули проекта
+# встроенные модули
 from typing import Optional
 
+# модули проекта
 from trivial_tools.files.json import json_config_load
+from trivial_tools.classes.singleton_base import Singleton
 
 
-class BaseConfig:
+class BaseConfig(metaclass=Singleton):
     """
     Базовый класс для хранения параметров
     """
@@ -85,3 +87,10 @@ class BaseConfig:
             value = getattr(self, field_name)
             result.append(f'{field_name}={value!r}')
         return f'{name}(' + ', '.join(result) + ')'
+
+    def get_instance(self):
+        """
+        Получить экземпляр
+        """
+        instance = Singleton.get_instance(self)
+        return instance

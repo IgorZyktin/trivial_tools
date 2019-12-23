@@ -88,9 +88,10 @@ class BaseConfig(metaclass=Singleton):
             result.append(f'{field_name}={value!r}')
         return f'{name}(' + ', '.join(result) + ')'
 
-    def get_instance(self):
+    @classmethod
+    def get_instance(cls):
         """
         Получить экземпляр
         """
-        instance = Singleton.get_instance(self)
+        instance = Singleton.get_instance(cls)
         return instance

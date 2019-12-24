@@ -5,10 +5,12 @@
 
 """
 # встроенные модули
+import sys
 from typing import Optional
 
 # модули проекта
 from trivial_tools.files.json import json_config_load
+from trivial_tools.system.envs import get_env_variable
 from trivial_tools.classes.singleton_base import Singleton
 
 
@@ -95,3 +97,25 @@ class BaseConfig(metaclass=Singleton):
         """
         instance = Singleton.get_instance(cls)
         return instance
+
+    @classmethod
+    def get_config(cls, env_name: str, config_filename: str = 'config.json'):
+        """
+        Получить экземпляр конфига
+        """
+        config = cls.from_json(
+            filename=config_filename,
+            config_name=cls.get_config_name(),
+            default_config=get_env_variable(env_name)
+        )
+        return config
+
+    @staticmethod
+    def get_config_name() -> Optional[str]:
+        """
+        Примитивный способ получить имя конфигурации из аргументов запуска
+        """
+        config_name = None
+        if len(sys.argv) >= 3 and sys.argv[1] == '--config':
+            config_name = sys.argv[2]
+        return config_name

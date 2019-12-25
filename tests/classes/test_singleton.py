@@ -8,12 +8,12 @@
 import pytest
 
 # модули проекта
-from trivial_tools.classes.singleton_base import Singleton
+from trivial_tools.classes.singleton_base import MetaSingleton
 
 
 @pytest.fixture
 def class_():
-    class Test(metaclass=Singleton):
+    class Test(metaclass=MetaSingleton):
         def __init__(self, x):
             self.x = x
     return Test
@@ -70,4 +70,4 @@ def test_get_instance_fail(class_):
     Создание экземпляра, проверка собственно метакласса
     """
     with pytest.raises(KeyError):
-        Singleton.get_instance(1)
+        MetaSingleton.get_instance(1)

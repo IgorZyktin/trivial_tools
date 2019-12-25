@@ -3,21 +3,35 @@
 
     Базовый класс для управления конфигурациями
 
+    Он является частичным синглтоном - помнит первый созданный экземпляр, но
+    допускает существование нескольких штук при необходимости.
+
 """
 # встроенные модули
 import sys
 from typing import Optional
 
 # модули проекта
+from special.special import fail
 from trivial_tools.files.json import json_config_load
 from trivial_tools.system.envs import get_env_variable
-from trivial_tools.classes.singleton_base import Singleton
 
 
-class BaseConfig(metaclass=Singleton):
+class BaseConfig:
     """
     Базовый класс для хранения параметров
     """
+    __first_instance = None
+
+    def __new__(cls, *args, **kwargs):
+        """
+        Создание экземпляра
+        """
+        instance = super(BaseConfig, cls).__new__(*args, **kwargs)
+        if cls.__first_instance is None:
+            cls.__first_instance = instance
+        return instance
+
     def __init__(self, **kwargs):
         """
         Автоматическая инициация
@@ -94,7 +108,9 @@ class BaseConfig(metaclass=Singleton):
         """
         Получить экземпляр
         """
-        return Singleton.get_instance(cls)
+        if cls.__first_instance is None:
+            fail('Экземпляр конфига ещё ни разу не был создан!', reason=ValueError)
+        return cls.__first_instance
 
     @classmethod
     def get_config(cls, env_name: str, config_filename: str = 'config.json'):

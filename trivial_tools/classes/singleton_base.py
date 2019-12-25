@@ -9,7 +9,7 @@ from trivial_tools.special.special import fail
 from trivial_tools.formatters.base import s_type
 
 
-class Singleton(type):
+class MetaSingleton(type):
     """
     Метакласс для реализации паттерна одиночка
     """
@@ -19,9 +19,9 @@ class Singleton(type):
         """
         Вызов может быть от различных классов!
         """
-        if cls not in Singleton._instances:
-            Singleton._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return Singleton._instances[cls]
+        if cls not in MetaSingleton._instances:
+            MetaSingleton._instances[cls] = super(MetaSingleton, cls).__call__(*args, **kwargs)
+        return MetaSingleton._instances[cls]
 
     @classmethod
     def get_instance(mcs, required_cls):

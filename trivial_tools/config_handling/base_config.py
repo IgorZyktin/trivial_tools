@@ -46,8 +46,7 @@ class BaseConfig(metaclass=Singleton):
         Загрузить настройки из json файла
         """
         parameters = json_config_load(filename, config_name, default_config)
-        instance = cls(**parameters)
-        return instance
+        return cls(**parameters)
 
     def __str__(self):
         """
@@ -95,8 +94,7 @@ class BaseConfig(metaclass=Singleton):
         """
         Получить экземпляр
         """
-        instance = Singleton.get_instance(cls)
-        return instance
+        return Singleton.get_instance(cls)
 
     @classmethod
     def get_config(cls, env_name: str, config_filename: str = 'config.json'):

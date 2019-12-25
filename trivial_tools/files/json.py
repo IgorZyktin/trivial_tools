@@ -24,16 +24,21 @@ def json_config_load(filename: str, config_name: str,
         with open(path, mode='r', encoding='utf-8') as file:
             data = json.load(file)
 
+            add_config = {}
+            base_config = data['base']
+
             if config_name in data:
-                config_data = data[config_name]
+                add_config = data[config_name]
 
             elif default_config in data:
-                config_data = data[default_config]
+                add_config = data[default_config]
 
+            if add_config:
+                resulting_config = {**base_config, **add_config}
             else:
-                raise KeyError
+                resulting_config = base_config
 
-            return config_data
+            return resulting_config
 
     except FileNotFoundError:
         logger.critical(f'Не найден файл конфигурации: "{path}"')

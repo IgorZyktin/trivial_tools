@@ -15,7 +15,7 @@ from loguru import logger
 
 # модули проекта
 from trivial_tools.special.special import fail
-from trivial_tools.config_handling import BaseConfig
+from trivial_tools.config_handling.base_config import BaseConfig
 from trivial_tools.system.envs import get_full_path_from_env, get_env_variable
 
 

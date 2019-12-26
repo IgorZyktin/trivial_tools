@@ -1,1 +1,1 @@
-from trivial_tools.config_handling.base_config import *
+from trivial_tools.config_handling.abstract_config import *

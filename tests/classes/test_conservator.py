@@ -75,6 +75,10 @@ def test_register_force(class_):
     assert class_.get_instance() == 256
     assert class_.has_instance()
 
+    with pytest.raises(ValueError):
+        inst = class_(3)
+        class_.register_force(inst)
+
 
 def test_unregister(class_):
     """
@@ -123,3 +127,27 @@ def test_get_instance(class_):
 
     with pytest.raises(ValueError):
         class_.get_instance()
+
+
+def test_register_mock(class_):
+    """
+    Добавить тестовый экземпляр
+    """
+    assert not class_.has_instance()
+    assert not class_.has_mock_instance()
+
+    real = class_(1)
+    with pytest.warns(Warning):
+        inst = class_(2)
+    class_.register_mock(inst)
+    assert class_.get_mock_instance() is inst
+
+    assert class_.has_instance()
+    assert class_.has_mock_instance()
+
+    assert class_.get_instance() is inst
+    assert class_.get_instance() is real
+    assert class_.get_instance() is real
+
+    assert class_.has_instance()
+    assert not class_.has_mock_instance()

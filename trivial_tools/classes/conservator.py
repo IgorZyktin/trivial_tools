@@ -20,6 +20,7 @@ class Conservator(Generic[T]):
     Класс, хранящий экземпляр себя
     """
     __instance: Optional[T] = None
+    __mock_instance: Optional[T] = None
 
     def __new__(cls, *args, **kwargs):
         """
@@ -45,6 +46,13 @@ class Conservator(Generic[T]):
                  reason=ValueError)
 
         cls.register_force(instance)
+
+    @classmethod
+    def register_mock(cls, instance: T) -> None:
+        """
+        Добавить валидный тестовый экземпляр
+        """
+        cls.__mock_instance = instance
 
     @classmethod
     def register_force(cls, instance: T) -> None:
@@ -84,9 +92,25 @@ class Conservator(Generic[T]):
         """
         Получить валидный экземпляр
         """
+        if cls.__mock_instance:
+            result = cls.__mock_instance
+            cls.__mock_instance = None
+            return result
+
         if not cls.__instance:
             fail(f'Класс {s_type(cls)} ещё не имеет хранимого экземпляра!', reason=ValueError)
+
         return cls.__instance
+
+    @classmethod
+    def get_mock_instance(cls) -> T:
+        """
+        Получить валидный тестовый экземпляр
+        """
+        if not cls.__mock_instance:
+            fail(f'Класс {s_type(cls)} ещё не имеет тестового хранимого экземпляра!',
+                 reason=ValueError)
+        return cls.__mock_instance
 
     @classmethod
     def has_instance(cls) -> bool:
@@ -94,3 +118,10 @@ class Conservator(Generic[T]):
         Проверить наличие экземпляра
         """
         return cls.__instance is not None
+
+    @classmethod
+    def has_mock_instance(cls) -> bool:
+        """
+        Проверить наличие тестового экземпляра
+        """
+        return cls.__mock_instance is not None

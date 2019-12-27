@@ -34,9 +34,6 @@ def test_double_creation(class_):
     t = class_(1)
     assert t.var == 1
 
-    with pytest.warns(Warning):
-        class_(2)
-
 
 def test_register(class_):
     """
@@ -44,12 +41,11 @@ def test_register(class_):
     """
     assert not class_.has_instance()
     inst_1 = class_(1)
+    assert not class_.has_instance()
+    class_.register(inst_1)
 
-    with pytest.warns(Warning):
-        inst_2 = class_(2)
-
-    with pytest.warns(Warning):
-        inst_3 = class_(3)
+    inst_2 = class_(2)
+    inst_3 = class_(3)
 
     assert class_.get_instance() is inst_1
 
@@ -89,6 +85,7 @@ def test_unregister(class_):
         class_.unregister()
 
     t = class_(1)
+    class_.register(t)
     t.unregister()
     assert not class_.has_instance()
 

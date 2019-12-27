@@ -4,6 +4,9 @@
     Базовый класс для управления конфигурациями
 
 """
+# встроенные модули
+from contextlib import contextmanager
+
 # модули проекта
 from trivial_tools.classes.fluid import Fluid
 from trivial_tools.config_handling import AbstractConfig
@@ -22,3 +25,13 @@ class BaseConfig(Fluid, Conservator, AbstractConfig):
         if cls.has_instance():
             return cls.get_instance()
         return cls.from_json(config_name, filename)
+
+    @classmethod
+    @contextmanager
+    def temporary_config(cls, **kwargs):
+        """
+        Контекстный менеджер для тестового экземпляра
+        """
+        tmp_instance = cls.from_dict(kwargs)
+        cls.register_mock(tmp_instance)
+        yield

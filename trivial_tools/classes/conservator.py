@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    Класс, хранящий экземпляр себя
+    Класс, хранящий экземпляр себя. Синглтон, для тех, кто пишет тесты
 
 """
 # встроенные модули
-from warnings import warn
 from typing import TypeVar, Generic, Optional
 
 # модули проекта
@@ -21,19 +20,6 @@ class Conservator(Generic[T]):
     """
     __instance: Optional[T] = None
     __mock_instance: Optional[T] = None
-
-    def __new__(cls, *args, **kwargs):
-        """
-        Конструирование экземпляра
-        """
-        instance = super().__new__(cls)
-
-        if cls.__instance is None:
-            cls.__instance = instance
-        else:
-            warn(f'Класс {s_type(cls)} уже имеет хранимый экземпляр!\n'
-                 'При создании нового экземпляра желательно явно удалить старый.', Warning)
-        return instance
 
     @classmethod
     def register(cls, instance: T) -> None:

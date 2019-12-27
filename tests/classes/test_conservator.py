@@ -96,6 +96,7 @@ def test_replace(class_):
     """
     assert not class_.has_instance()
     inst = class_(1)
+    class_.register(inst)
     assert class_.has_instance()
 
     with pytest.raises(ValueError):
@@ -124,27 +125,3 @@ def test_get_instance(class_):
 
     with pytest.raises(ValueError):
         class_.get_instance()
-
-
-def test_register_mock(class_):
-    """
-    Добавить тестовый экземпляр
-    """
-    assert not class_.has_instance()
-    assert not class_.has_mock_instance()
-
-    real = class_(1)
-    with pytest.warns(Warning):
-        inst = class_(2)
-    class_.register_mock(inst)
-    assert class_.get_mock_instance() is inst
-
-    assert class_.has_instance()
-    assert class_.has_mock_instance()
-
-    assert class_.get_instance() is inst
-    assert class_.get_instance() is real
-    assert class_.get_instance() is real
-
-    assert class_.has_instance()
-    assert not class_.has_mock_instance()

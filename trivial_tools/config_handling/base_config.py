@@ -32,6 +32,18 @@ class BaseConfig(Fluid, Conservator, AbstractConfig):
         """
         Контекстный менеджер для тестового экземпляра
         """
-        tmp_instance = cls.from_dict(kwargs)
-        cls.register_mock(tmp_instance)
+        if cls.has_instance():
+            original = cls.get_instance()
+            cls.unregister()
+        else:
+            original = None
+
+        tmp_instance = cls(**kwargs)
+        cls.register(tmp_instance)
+
         yield
+
+        if original is None:
+            cls.unregister()
+        else:
+            cls.replace(original)

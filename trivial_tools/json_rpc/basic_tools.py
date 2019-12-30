@@ -24,7 +24,7 @@ def result(output: Any, request_id: id_type = None) -> Dict[str, Any]:
     return {"jsonrpc": "2.0", "result": output, "id": request_id}
 
 
-def error(output: str, request_id: id_type = None) -> Dict[str, Any]:
+def error(output: Any, request_id: id_type = None) -> Dict[str, Any]:
     """
     Неудачный результат
     """

@@ -20,14 +20,13 @@ def make_post(url: str, json: dict) -> Optional[Dict[str, Any]]:
     Выполнить POST запрос и получить данные
     """
     response = requests.post(url, json=json)
+
     if response.status_code == 200:
         result = response.json()
     else:
-        logger.critical('Критический сбой!')
-        logger.critical(response.content)
+        logger.critical(f'Код возврата: {response.status_code}')
+        logger.critical(response.content.decode('utf-8'))
         result = None
-    # else:
-    #     result = result.get('result')
 
     return result
 

@@ -67,7 +67,7 @@ def repeat_on_exceptions(repeats: int, case: Union[Exception, Tuple[Exception]],
 
 
 def start_working(folder_name: str, config_name: Optional[str], func: Callable,
-                  config_type: Type[BaseConfig], env_name: str,
+                  config_type: Type[BaseConfig],
                   config_filename: str = 'config.json', infinite: bool = True) -> None:
     """Стартовать скрипт с выбранными настройками.
 
@@ -75,14 +75,12 @@ def start_working(folder_name: str, config_name: Optional[str], func: Callable,
     :param config_name: принудительный выбор конфигурации для скрипта при запуске из консоли
     :param func: рабочая функция скрпта, которая будет выполнять всю полезную работу
     :param config_type: класс конфигурации для выбранного скрипта
-    :param env_name: имя переменной окружения, в которой хранится имя конфигурации по умолчанию
     :param config_filename: имя json файла в котором следует искать кофигурацию
     :param infinite: флаг бесконечного перезапуска скрипта при выбросе исключения
     """
     config = config_type.from_json(
-        filename=os.path.join(folder_name, config_filename),
         config_name=config_name,
-        default_config=get_env_variable(env_name)
+        filename=os.path.join(folder_name, config_filename)
     )
 
     logger.add(

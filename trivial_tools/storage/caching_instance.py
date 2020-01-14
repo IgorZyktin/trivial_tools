@@ -41,5 +41,4 @@ class CachingInstance:
         """
         Текстовое представление
         """
-        name = type(self).__name__
-        return f'{name}(value={self.value!r}, expires={self.expires!r})'
+        return f'{type(self).__name__}(value={self.value!r}, expires={self.expires!r})'

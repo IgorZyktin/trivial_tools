@@ -5,6 +5,7 @@
 
 """
 # встроенные модули
+from types import FunctionType
 from typing import Any, Dict, Optional
 
 # модули проекта
@@ -28,6 +29,12 @@ class CachingMachine:
         """
         return self._cache[item]
 
+    def __contains__(self, item):
+        """
+        Проверка наличия внутри кеша
+        """
+        return item in self._cache
+
     def extract(self, key: Any) -> Optional[Any]:
         """
         Общая функция извлечения значения. В отличии от редиса,
@@ -42,7 +49,7 @@ class CachingMachine:
                 self.delete(key)
         return None
 
-    def assign(self, key: Any, value: Any, expires: Optional[int]=None) -> bool:
+    def assign(self, key: Any, value: Any, expires: Optional[int] = None) -> bool:
         """
         Общая функция установки значения. В отличии от редиса,
         мы можем хранить какие попало значения, поэтому в итоге всё сводится к
@@ -122,3 +129,40 @@ class CachingMachine:
         Проверить заполнен ли кеш
         """
         return self.total() == self.max_items
+
+    def keys(self) -> list:
+        """
+        Получить все ключи машины
+        """
+        return list(self._cache.keys())
+
+    def cache_call(self, expires: Optional[int] = None):
+        """
+        Кешировать результат выполнения функции
+        """
+        def decorator(func: FunctionType):
+            def wrapper(*args):
+                key = (func.__name__, args)
+                if key in self:
+                    result = self.extract(key)
+                else:
+                    result = func(*args)
+                    self.assign(key, result, expires)
+                return result
+            return wrapper
+        return decorator
+
+    def cache_call_using_strings(self, expires: Optional[int] = None):
+        """
+        Кешировать результат выполнения функции, но ключи хранить в виде строк
+        """
+        def decorator(func: FunctionType):
+            def wrapper(*args):
+                key = f'{func.__name__}_' + '_'.join(str(x) for x in args)
+                if key not in self:
+                    result = func(*args)
+                    self.assign(key, result, expires)
+                value = self.extract(key)
+                return value
+            return wrapper
+        return decorator

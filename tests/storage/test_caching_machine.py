@@ -24,7 +24,7 @@ def machine_persistent():
 
 
 @pytest.fixture()
-def machine_persistent():
+def machine_not_persistent():
     """
     Машина со сроком хранения 5 секунд
     """
@@ -67,3 +67,34 @@ def test_fill(machine_tiny):
 
         machine_tiny.clear()
         assert machine_tiny.total() == 0
+
+
+def test_caching(machine_persistent):
+    """
+    Проверка работы декоратора
+    """
+    @machine_persistent.cache_call()
+    def func(x, y):
+        return x + y
+
+    assert func(1, 2) == 3
+    assert func(2, 3) == 5
+    assert func(1, 2) == 3
+
+    assert machine_persistent.keys() == [('func', (1, 2)), ('func', (2, 3))]
+
+
+def test_caching_string(machine_persistent):
+    """
+    Проверка работы декоратора
+    """
+
+    @machine_persistent.cache_call_using_strings()
+    def func(x, y):
+        return x + y
+
+    assert func(1, 2) == 3
+    assert func(2, 3) == 5
+    assert func(1, 2) == 3
+
+    assert machine_persistent.keys() == ['func_1_2', 'func_2_3']

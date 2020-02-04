@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="trivial_tools",
-    version="8.8",
+    version="8.9",
     author="Igor Zyktin",
     author_email="nicord@yandex.ru",
     description="Trivial tools for various scripts",
@@ -18,5 +18,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.7',
+    python_requires='>=3.6',
 )

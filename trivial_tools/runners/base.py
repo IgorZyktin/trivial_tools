@@ -7,16 +7,18 @@
 # встроенные модули
 import os
 import time
+from datetime import datetime
 from functools import wraps
-from typing import Callable, Union, Tuple, Any, Type, Optional
+from typing import Callable, Union, Tuple, Any, Type, Optional, Dict
 
 # сторонние модули
 from loguru import logger
 
 # модули проекта
+from json_rpc.calls import call_api
 from trivial_tools.special.special import fail
+from trivial_tools.system.envs import get_full_path_from_env
 from trivial_tools.config_handling.base_config import BaseConfig
-from trivial_tools.system.envs import get_full_path_from_env, get_env_variable
 
 
 def repeat_on_exceptions(repeats: int, case: Union[Exception, Tuple[Exception]],
@@ -51,7 +53,7 @@ def repeat_on_exceptions(repeats: int, case: Union[Exception, Tuple[Exception]],
                     iteration += 1
 
                     if verbose:
-                        logger.warning(f'Исключение {type(exc)} в функции {func.__name__}'
+                        logger.warning(f'{exc} в функции {func.__name__}'
                                        f' (итерация {iteration})')
 
                     if repeats and iteration > repeats:
@@ -109,6 +111,101 @@ def start_working(folder_name: str, config_name: Optional[str], func: Callable,
             break
         except Exception:
             logger.exception('\nКритический сбой!')
+
+        if not infinite:
+            break
+
+    logger.warning(separator)
+
+
+def capture_exception_output(title: str) -> Optional[str]:
+    """
+    Перехватить описание ошибки из loguru
+    """
+    storage = []
+    sink_id = logger.add(sink=lambda msg: storage.append(msg))
+    logger.exception(title)
+    logger.remove(sink_id)
+    return storage[0] if storage else None
+
+
+def _execute(config, handler: Callable, separator: str) -> str:
+    """
+    Исполнить с логгированием
+    """
+    logger.add(
+        config.LOGGER_FILENAME,
+        level=config.LOGGER_LEVEL,
+        rotation=config.LOGGER_ROTATION
+    )
+    logger.warning(separator)
+    logger.info(config.START_MESSAGE)
+    logger.info(config)
+
+    # @@@@@@@@@@@@@@@@@@@@
+    message = handler()
+    # @@@@@@@@@@@@@@@@@@@@
+
+    logger.info(message)
+    return message
+
+
+def init_daemon(config, handler: Callable, infinite: bool = False) -> None:
+    """Стартовать скрипт с выбранными настройками.
+
+    :param config: класс, атрибуты которого являются нашими настрояками
+    :param handler: рабочая функция скрпта, которая будет выполнять всю полезную работу
+    :param infinite: флаг бесконечного перезапуска скрипта при выбросе исключения
+    """
+    separator = '#' * 79
+
+    while True:
+        normal_stop = False
+        time_start = datetime.now()
+
+        payload: Dict[str, str] = {
+            "service_name": config.SERVICE_NAME,
+            "status": 'normal',
+            "title": 'Успешное исполнение. Длительность - {} сек.'
+        }
+
+        # noinspection PyBroadException
+        try:
+            message = _execute(config, handler, separator)
+
+            if message == '<stop>':
+                logger.warning('Остановка по команде скрипта')
+                normal_stop = True
+                break
+
+        except KeyboardInterrupt:
+            logger.warning('Остановка по команде с клавиатуры')
+            normal_stop = True
+            break
+
+        except Exception:
+            description = capture_exception_output(f'Критический сбой {config.SERVICE_NAME}')
+            payload['status'] = 'fail'
+            payload['title'] = 'Остановка работы после {} сек. из-за критического сбоя'
+            payload['text'] = description or 'Не удалось сохранить'
+
+        else:
+            payload['text'] = message
+
+        finally:
+            duration = int((datetime.now() - time_start).total_seconds())
+            payload['title'] = payload['title'].format(duration)
+
+            if config.in_production() and not normal_stop:
+                # noinspection PyProtectedMember
+                call_api(
+                    url=config.API_URL,
+                    method='register_report',
+                    report=payload,
+                    fingerprint=config._FINGERPRINT,
+                    error_msg=f'Не удалось отправить отчёт о состоянии на {config.API_URL}!',
+                    debug=config.in_debug()
+                )
 
         if not infinite:
             break

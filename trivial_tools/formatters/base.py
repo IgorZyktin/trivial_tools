@@ -85,3 +85,13 @@ def detail(something: Any) -> str:
     '9, int'
     """
     return f'{shorten(something)}, {s_type(something)}'
+
+
+def dict_as_args(input_dict: dict) -> str:
+    """
+    Разложить словарь на последовательность аргументов будто это ключевые слова
+
+    >>> dict_as_args(dict(a=1, b=2, c="test"))
+    "a=1, b=2, c='test'"
+    """
+    return ', '.join(f'{key}={value!r}' for key, value in input_dict.items())

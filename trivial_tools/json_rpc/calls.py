@@ -12,10 +12,10 @@ import requests
 from loguru import logger
 
 # модули проекта
-from special.special import fail
-from formatters.base import dict_as_args
-from runners.base import repeat_on_exceptions
-from json_rpc.basic_tools import form_request
+from trivial_tools.special.special import fail
+from trivial_tools.formatters.base import dict_as_args
+from trivial_tools.runners.base import repeat_on_exceptions
+from trivial_tools.json_rpc.basic_tools import form_request
 
 
 @repeat_on_exceptions(repeats=5, case=Exception, delay=1)

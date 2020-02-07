@@ -15,7 +15,6 @@ from typing import Callable, Union, Tuple, Any, Type, Optional, Dict
 from loguru import logger
 
 # модули проекта
-from json_rpc.calls import call_api
 from trivial_tools.special.special import fail
 from trivial_tools.system.envs import get_full_path_from_env
 from trivial_tools.config_handling.base_config import BaseConfig
@@ -157,6 +156,9 @@ def init_daemon(config, handler: Callable, infinite: bool = False) -> None:
     :param handler: рабочая функция скрпта, которая будет выполнять всю полезную работу
     :param infinite: флаг бесконечного перезапуска скрипта при выбросе исключения
     """
+    # избегаем циклической ссылки
+    from trivial_tools.json_rpc.calls import call_api
+
     separator = '#' * 79
 
     while True:

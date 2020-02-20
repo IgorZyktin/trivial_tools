@@ -7,6 +7,7 @@
 """
 # встроенные модули
 import json
+from enum import Enum
 from inspect import signature
 from types import FunctionType
 from typing import Optional, List, Callable, Dict, Sequence, Tuple, Any, Union
@@ -14,15 +15,24 @@ from typing import Optional, List, Callable, Dict, Sequence, Tuple, Any, Union
 # сторонние модули
 from trivial_tools.formatters.base import s_type
 
-JSON_RPC = Dict[str, Any]
+# словарь запроса
+SingleRequest = Dict[str, Any]
+GroupRequest = List[Dict[str, Any]]
+
+# словарь ответа
+SingleResponse = Tuple[SingleRequest, int]
 
 
-OK: int = 200
-BAD_REQUEST: int = 400
-NOT_AUTHORIZED: int = 401
-METHOD_NOT_ALLOWED: int = 405
-NOT_ACCEPTABLE: int = 406
-INTERNAL_ERROR: int = 500
+class HTTP(Enum):
+    """
+    Коды ответов
+    """
+    OK: int = 200
+    BAD_REQUEST: int = 400
+    NOT_AUTHORIZED: int = 401
+    METHOD_NOT_ALLOWED: int = 405
+    NOT_ACCEPTABLE: int = 406
+    INTERNAL_ERROR: int = 500
 
 
 class JSONRPCMethodMaster:
@@ -56,31 +66,35 @@ class JSONRPCMethodMaster:
         """
         return method_name not in self._methods
 
-    def check_signature(self, body: Union[JSON_RPC, List[JSON_RPC]]):
+    def check_signature(self, body: Union[SingleRequest, GroupRequest]) -> List[SingleResponse]:
         """
         Проверка полученных параметров на соответствие сигнатуре метода
         """
-        response = []
-        return_code = NOT_ACCEPTABLE
-
         if isinstance(body, dict):
-            error_message = self._check_signature(body)
-            if error_message:
-                return {'code': -32602, 'message': error_message}, return_code
-            else:
-                return body, OK
+            # одиночный запрос
+            error_msg = self._check_signature(body)
+            if error_msg:
+                return [({'code': -32602, 'message': error_msg}, HTTP.NOT_ACCEPTABLE)]
+            return [(body, HTTP.OK)]
 
-        else:
+        if isinstance(body, list):
+            # групповой запрос
+            response = []
             for sub_body in body:
-                error_message = self._check_signature(sub_body)
-                if error_message:
-                    response.append(({'code': -32602, 'message': error_message}, return_code))
+                error_msg = self._check_signature(sub_body)
+                if error_msg:
+                    response.append(({'code': -32602, 'message': error_msg}, HTTP.BAD_REQUEST))
                 else:
-                    response.append(({'code': -32602, 'message': error_message}, OK))
+                    response.append((sub_body, HTTP.OK))
 
-        return response, return_code
+            return response
 
-    def _check_signature(self, body: JSON_RPC) -> str:
+        # bad request
+        bad_response = {'code': -32700, 'message': f'Неправильный формат запроса.'}
+        return_code = HTTP.BAD_REQUEST
+        return [(bad_response, return_code)]
+
+    def _check_signature(self, body: SingleRequest) -> str:
         """
         Проверка полученных параметров на соответствие сигнатуре метода
         """
@@ -125,96 +139,95 @@ class JSONRPCMethodMaster:
         return sorted(self._methods.keys())
 
     @staticmethod
-    def extract_json(request) -> Tuple[Union[JSON_RPC, List[JSON_RPC]], int]:
+    def extract_json(request) -> Tuple[Union[SingleRequest, List[SingleRequest]], int]:
         """
         Безопасное извлечение JSON из запроса
         """
         try:
             request_body = request.json()
-            return_code = OK
+            return_code = HTTP.OK
 
         except json.JSONDecodeError as err:
             request_body = {'code': -32700, 'message': f'Неправильный формат запроса, {err}'}
-            return_code = BAD_REQUEST
+            return_code = HTTP.BAD_REQUEST
 
         return request_body, return_code
 
-    def check_request(self, body: Union[JSON_RPC, List[JSON_RPC]])\
-            -> Tuple[Union[JSON_RPC, List[JSON_RPC]], int]:
+    def check_request(self, body: Union[SingleRequest, GroupRequest]) -> List[SingleResponse]:
         """
         Проверить на предмет соответствия JSON RPC 2.0
         """
-        return_code = BAD_REQUEST
+        result = []
 
         if isinstance(body, dict):
-            response, return_code = self.check_dict(body)
+            response, status_code = self.check_dict(body)
+            result.append((response, status_code))
 
         elif isinstance(body, list):
-            response = []
             for sub_body in body:
-                checked_body, return_code = self.check_dict(sub_body)
-
-                if return_code != OK:
-                    break
-
-                response.append(checked_body)
+                response, status_code = self.check_dict(sub_body)
+                result.append((response, status_code))
         else:
             response = {'code': -32700, 'message': f'Неправильный формат запроса, {s_type(body)}'}
+            result.append((response, HTTP.BAD_REQUEST))
 
-        return response, return_code
+        return result
 
-    def check_dict(self, body: JSON_RPC) -> Tuple[JSON_RPC, int]:
+    def check_dict(self, body: SingleRequest) -> SingleResponse:
         """
         Проверить словарь запроса
         """
-        return_code = BAD_REQUEST
-
         version = body.get('jsonrpc')
         method = body.get('method')
         params = body.get('params')
 
-        if version != '2.0':
-            return {'code': -32600,
-                    'message': 'Поддерживается только JSON-RPC 2.0.'}, return_code
+        response = body
+        status_code = HTTP.OK
 
-        if method is None:
-            return {'code': -32601,
-                    'message': 'Не указан метод запроса.'}, return_code
+        if version != '2.0':
+            response = {'code': -32600, 'message': 'Поддерживается только JSON-RPC 2.0.'}
+            status_code = HTTP.BAD_REQUEST
+
+        elif method is None:
+            response = {'code': -32601, 'message': 'Не указан метод запроса.'}
+            status_code = HTTP.BAD_REQUEST
 
         elif method not in self._methods:
-            return {'code': -32601,
-                    'message': f'Неизвестный метод: {method}.'}, METHOD_NOT_ALLOWED
+            response = {'code': -32601, 'message': f'Неизвестный метод: {method}.'}
+            status_code = HTTP.METHOD_NOT_ALLOWED
 
-        if params is None:
-            return {'code': -32602,
-                    'message': 'Не указаны аргументы вызова.'}, return_code
+        elif params is None:
+            response = {'code': -32602, 'message': 'Не указаны аргументы вызова.'}
+            status_code = HTTP.BAD_REQUEST
 
         elif params.get('secret_key') is None:
-            return {'code': -32602,
-                    'message': 'Не предоставлен ключ авторизации.'}, NOT_AUTHORIZED
+            response = {'code': -32602, 'message': 'Не предоставлен ключ авторизации.'}
+            status_code = HTTP.NOT_AUTHORIZED
 
         elif isinstance(params, list):
-            return {'code': -32602,
-                    'message': 'Передача аргументов по позиции не поддерживается.'}, NOT_ACCEPTABLE
+            response = {'code': -32602, 'message': 'Позиционные аргументы не поддерживаеются.'}
+            status_code = HTTP.NOT_ACCEPTABLE
 
         elif not isinstance(params, dict):
-            return {'code': -32602,
-                    'message': f'Неправильно оформлены аргументы: {params}'}, NOT_ACCEPTABLE
+            response = {'code': -32602, 'message': f'Неправильно оформлены аргументы: {params!r}'}
+            status_code = HTTP.NOT_ACCEPTABLE
 
-        return body, OK
+        return response, status_code
 
     @staticmethod
-    def authorize(body: JSON_RPC, check_func: Callable) -> Tuple[JSON_RPC, int]:
+    def authorize(body: SingleRequest, check_func: Callable) -> SingleResponse:
         """
         Проверить авторизацию внешней функцией
         """
-        checked_body, return_code = check_func(body)
-        if return_code != OK:
-            return {'code': -32602,
-                    'message': f'Отказано в доступе.'}, NOT_AUTHORIZED
-        return checked_body, OK
+        response, status_code = check_func(body)
 
-    def execute(self, body: JSON_RPC) -> Any:
+        if status_code != HTTP.OK:
+            response = {'code': -32602, 'message': f'Отказано в доступе.'}
+            status_code = HTTP.NOT_AUTHORIZED
+
+        return response, status_code
+
+    def execute(self, body: SingleRequest) -> Any:
         """
         Исполнить запрос
         """
@@ -222,8 +235,11 @@ class JSONRPCMethodMaster:
         params = body.get('params', {})
         method = self.get_method(method_name)
 
-        # секуретный ключ не нужен внутри методов
+        # секретный ключ не нужен внутри методов
         params.pop('secret_key', None)
 
+        # @@@@@@@@@@@@@@@@@@@@@@@@
         response = method(**params)
+        # @@@@@@@@@@@@@@@@@@@@@@@@
+
         return response

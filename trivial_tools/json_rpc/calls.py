@@ -30,10 +30,9 @@ def call_api(url: str, *, method: str, error_msg: str, debug: bool, **kwargs) ->
     )
 
     if debug:
-        # запомнить, что мы запросили
+        # запомнить, что мы запросили, скрыть секреты
         safe_kwargs = {
-            key: value if key not in ('secret_key', 'fingerprint') else '***'
-            for key, value in kwargs.items()
+            key: value if key != 'secret_key' else '***' for key, value in kwargs.items()
         }
         logger.debug(f'---> {method}({dict_as_args(safe_kwargs)})')
 

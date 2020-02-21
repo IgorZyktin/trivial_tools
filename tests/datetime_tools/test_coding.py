@@ -4,7 +4,7 @@
     Тесты шифрования интервалов времени
 
 """
-
+# модули проекта
 from trivial_tools.datetime_tools.coding import (
     encode_digits, encode_letters, encode_period, decode_letters, decode_digits, decode_period
 )

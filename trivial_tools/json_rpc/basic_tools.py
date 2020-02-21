@@ -16,15 +16,21 @@ def form_request(*, method: str, msg_id: Optional[Union[int, str]] = None,
     return {"jsonrpc": "2.0", "method": method, "params": {**kwargs}, "id": msg_id}
 
 
-def result(output: Any, msg_id: Optional[Union[int, str]] = None) -> Dict[str, Any]:
+def result(output: Any, need_id: bool = True,
+           msg_id: Optional[Union[int, str]] = None) -> Dict[str, Any]:
     """
     Успешный результат
     """
-    return {"jsonrpc": "2.0", "result": output, "id": msg_id}
+    if need_id:
+        return {"jsonrpc": "2.0", "result": output, "id": msg_id}
+    return {"jsonrpc": "2.0", "result": output}
 
 
-def error(output: Any, msg_id: Optional[Union[int, str]] = None) -> Dict[str, Any]:
+def error(output: Any, need_id: bool = True,
+          msg_id: Optional[Union[int, str]] = None) -> Dict[str, Any]:
     """
     Неудачный результат
     """
-    return {"jsonrpc": "2.0", "error": output, "id": msg_id}
+    if need_id:
+        return {"jsonrpc": "2.0", "error": output, "id": msg_id}
+    return {"jsonrpc": "2.0", "error": output}

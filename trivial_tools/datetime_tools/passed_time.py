@@ -16,6 +16,32 @@ def passed_time(delta: timedelta) -> str:
     """
     Трансформировать timedelta в описание времени в форме '6 дней, 4 часа, 35 минут'
     """
+    weeks, days, hours, minutes, seconds = calculate_time(delta)
+
+    result = join(weeks, days, hours, minutes, seconds)
+
+    if not result:
+        return '0 секунд'
+    return result
+
+
+def passed_times_short(delta: timedelta) -> str:
+    """
+    Трансформировать timedelta в описание времени в форме '6д 4ч 35м'
+    """
+    weeks, days, hours, minutes, seconds = calculate_time(delta)
+
+    result = join_short(weeks, days, hours, minutes, seconds)
+
+    if not result:
+        return '0с'
+    return result
+
+
+def calculate_time(delta: timedelta) -> Tuple[str, str, str, str, str]:
+    """
+    Рассчитать временные показатели
+    """
     delta = cast_seconds_to_timedelta(delta)
 
     weeks, rest_days = form_weeks(delta)
@@ -32,11 +58,29 @@ def passed_time(delta: timedelta) -> str:
 
     seconds = form_seconds(delta)
 
-    result = ', '.join([x for x in [weeks, days, hours, minutes, seconds] if x is not None])
+    return weeks, days, hours, minutes, seconds
 
-    if not result:
-        return '0 секунд'
+
+def join(weeks: str, days: str, hours: str, minutes: str, seconds: str) -> str:
+    """
+    Сшить все компоненты вместе
+    """
+    result = ', '.join([x for x in [weeks, days, hours, minutes, seconds] if x is not None])
     return result
+
+
+def join_short(weeks: str, days: str, hours: str, minutes: str, seconds: str) -> str:
+    """
+    Сшить все компоненты вместе (укороченно)
+    """
+    result = ''.join([x for x in [
+        weeks.split()[0] + 'н ' if weeks else '',
+        days.split()[0] + 'д ' if days else '',
+        hours.split()[0] + 'ч ' if hours else '',
+        minutes.split()[0] + 'м ' if minutes else '',
+        seconds.split()[0] + 'с' if seconds else ''
+    ] if x is not None])
+    return result.strip()
 
 
 def form_weeks(delta: timedelta) -> Tuple[Optional[str], int]:

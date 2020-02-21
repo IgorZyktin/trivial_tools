@@ -17,7 +17,7 @@ from trivial_tools.runners.base import repeat_on_exceptions
 
 def make_post(url: str, json: dict) -> Optional[Dict[str, Any]]:
     """
-    Выполнить POST запрос и получить данные
+    Выполнить POST запрос и получить данные.
     """
     response = requests.post(url, json=json)
 

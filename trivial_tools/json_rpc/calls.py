@@ -23,17 +23,13 @@ def call_api(url: str, *, method: str, error_msg: str, debug: bool, **kwargs) ->
     """
     Выполнить POST запрос
     """
-    payload = form_request(
-        method=method,
-        **kwargs
-    )
+    payload = form_request(method=method, **kwargs)
 
     if debug:
         # запомнить, что мы запросили, скрыть секреты
-        safe_kwargs = {
-            key: value if key != 'secret_key' else '***' for key, value in kwargs.items()
-        }
-        logger.debug(f'---> {method}({dict_as_args(safe_kwargs)})')
+        if 'secret_key' in kwargs:
+            kwargs['secret_key'] = '***'
+        logger.debug(f'---> {method}({dict_as_args(kwargs)})')
 
     r = requests.post(url, json=payload)
 

@@ -1,0 +1,3 @@
+[flake8]
+ignore = D208,D200,D204,DAR201,WPS331,DAR101,WPS305,I002,WPS602
+max-line-length = 100

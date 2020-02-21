@@ -75,6 +75,7 @@ def test_parse_date(date1, str_date1):
     Обработка даты
     """
     assert parse_date(str_date1) == date1
+    assert parse_date('2019-12-01 18:34:14') == date1
 
 
 def test_parse_dates(date1, date2, str_date1, str_date2):
@@ -84,22 +85,12 @@ def test_parse_dates(date1, date2, str_date1, str_date2):
     assert parse_dates([str_date1, str_date2]) == [date1, date2]
 
 
-def test_parse_time(datetime1, datetime1_str_s, datetime1_str_ms):
-    """
-    Преобразовать текст в объект времени
-    """
-    fmt = "%Y-%m-%d %H:%M:%S"
-    assert parse_time(datetime1_str_s, fmt) == datetime.strptime(datetime1_str_s, fmt)
-
-    fmt = "%Y-%m-%d %H:%M:%S.%f"
-    assert parse_time(datetime1_str_ms, fmt) == datetime.strptime(datetime1_str_ms, fmt)
-
-
 def test_parse_time_s(datetime0, datetime1_str_s):
     """
     Преобразовать текст в объект времени с точностью до секунд
     """
     assert parse_time_s(datetime1_str_s) == datetime0
+    assert parse_time_s('2019-12-01 13:27:34.356') == datetime0
 
 
 def test_parse_time_ms(datetime1, datetime1_str_ms):
@@ -140,7 +131,7 @@ def test_timestamp_to_str(timestamp):
     """
     Преобразовать timestamp в текстовую форму.
     """
-    assert timestamp_to_str(timestamp) == '2019-12-11 11:26:48'
+    assert timestamp_to_text(timestamp) == '2019-12-11 11:26:48'
 
 
 def test_date_to_text(date1, str_date1):
@@ -148,14 +139,6 @@ def test_date_to_text(date1, str_date1):
     Преобразовать время в виде date в текстовую форму
     """
     assert date_to_text(date1) == str_date1
-
-
-def test_datetime_to_text(datetime1, str_date1, datetime1_str_s):
-    """
-    Преобразовать время в виде datetime в текстовую форму
-    """
-    assert datetime_to_text(datetime1, "%Y-%m-%d") == str_date1
-    assert datetime_to_text(datetime1, "%Y-%m-%d %H:%M:%S") == datetime1_str_s
 
 
 def test_datetime_to_text_s(datetime1, datetime1_str_s):

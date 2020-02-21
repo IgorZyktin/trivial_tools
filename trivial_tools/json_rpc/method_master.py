@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
 
+"""
     Регистратор методов для JSON-RPC.
+
     Используется для централизованного управления всеми методами приложения.
 
 """
@@ -9,63 +10,25 @@
 import json
 from inspect import signature
 from types import FunctionType
-from typing import Optional, List, Callable, Dict, Sequence, Union, TypedDict, Literal
+from typing import Optional, List, Callable, Dict, Sequence, Union
 
 # сторонние модули
-from trivial_tools.json_rpc.basic_tools import error
 from trivial_tools.formatters.base import s_type
-
-
-class Request(TypedDict):
-    """
-    JSON-RPC запрос
-    """
-    jsonrpc: Literal['2.0']
-    method: str
-    params: Dict[str, Union[int, str, float, bool, None, list, dict]]
-    id: Optional[Union[str, int, None]]
-
-
-GroupRequest = List[Request]
-
-
-class Result(TypedDict):
-    """
-    JSON-RPC ответ
-    """
-    jsonrpc: Literal['2.0']
-    result: Dict[str, Union[int, str, float, bool, None, list, dict]]
-    id: Union[int, str, None]
-
-
-class ErrorMessage(TypedDict):
-    """
-    JSON-RPC описание ошибки
-    """
-    code: int
-    message: str
-
-
-class Error(TypedDict):
-    """
-    JSON-RPC ошибка
-    """
-    jsonrpc: Literal['2.0']
-    error: ErrorMessage
-    id: Union[int, str, None]
-
-
-Response = Union[Result, Error]
+from trivial_tools.json_rpc.basic_tools import (
+    Request, Error, form_error, GroupRequest, Result, decide,
+)
 
 
 class JSONRPCMethodMaster:
     """
     Регистратор методов для JSON-RPC.
+
     Используется для централизованного управления всеми методами приложения.
     """
+
     def __init__(self, ignores: Sequence[str] = ('secret_key',)):
         """
-        Инициация
+        Инициация.
         """
         self._ignores = ['return'] + list(ignores)
         self._methods: Dict[str, Callable] = {}
@@ -91,62 +54,57 @@ class JSONRPCMethodMaster:
 
     def get_method(self, method_name: str) -> Optional[Callable]:
         """
-        Получить метод
+        Получить метод.
         """
         return self._methods.get(method_name)
 
     def get_method_names(self) -> List[str]:
         """
-        Получить имена доступных методов
+        Получить имена доступных методов.
         """
         return sorted(self._methods.keys())
 
-    def extract_json(self, request) -> Union[Request, Error]:
+    @staticmethod
+    def extract_json(request) -> Union[Request, Error]:
         """
-        Безопасное извлечение JSON из запроса
+        Безопасное извлечение JSON из запроса.
         """
         try:
-            if hasattr(request, 'get_json'):
+            try:
+                # Starlette, Requests
+                response = request.json()
+            except AttributeError:
                 # Flask
                 response = request.get_json()
-            else:
-                # Starlette
-                response = request.json()
 
         except json.JSONDecodeError as err:
-            response = self.form_err(
-                -32600,
-                f'Неправильный формат запроса, {s_type(err)}{err}', True, None
-            )
+            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}')
 
         return response
 
-    def check_signature(self, request: Union[Request, GroupRequest]) -> List[Union[Request, Error]]:
+    def check_signature(self, request: Union[Request, GroupRequest], requests: List[Request],
+                        errors: List[Error]) -> None:
         """
-        Проверка полученных параметров на соответствие сигнатуре метода
+        Проверка полученных параметров на соответствие сигнатуре метода.
         """
-        result = []
         if isinstance(request, dict):
             # одиночный запрос
             output = self._check_signature(request)
-            result.append(output)
+            decide(output, requests, errors)
 
         elif isinstance(request, list):
             # групповой запрос
             for sub_request in request:
                 output = self._check_signature(sub_request)
-                result.append(output)
+                decide(output, requests, errors)
 
         else:
-            output = self.form_err(-32600, f'Неправильный формат запроса, {s_type(request)}',
-                                   True, None)
-            result.append(output)
-
-        return result
+            output = form_error(-32600, f'Неправильный формат запроса, {s_type(request)}')
+            errors.append(output)
 
     def _check_signature(self, request: Request) -> Union[Request, Error]:
         """
-        Проверка полученных параметров на соответствие сигнатуре метода
+        Проверка полученных параметров на соответствие сигнатуре метода.
         """
         method_name = request.get('method')
         parameters = request.get('params').keys()
@@ -175,89 +133,63 @@ class JSONRPCMethodMaster:
             if excess:
                 message += 'лишние аргументы ' + excess
 
-            return self.form_err(-32602, message, need_id, msg_id)
+            return form_error(-32602, message, need_id, msg_id)
         return request
 
-    def check_request(self, request: Union[Request, GroupRequest]) -> List[Union[Request, Error]]:
+    def check_request(self, request: Union[Request, GroupRequest], requests: List[Request],
+                      errors: List[Error]) -> None:
         """
-        Проверить на предмет соответствия JSON RPC 2.0
+        Проверить на предмет соответствия JSON RPC 2.0.
         """
-        result = []
-
         if isinstance(request, dict):
             output = self.check_dict(request)
-            result.append(output)
+            decide(output, requests, errors)
 
         elif isinstance(request, list):
             for sub_body in request:
                 output = self.check_dict(sub_body)
-                result.append(output)
+                decide(output, requests, errors)
         else:
-            output = self.form_err(-32600, f'Неправильный формат запроса, {s_type(request)}',
-                                   True, None)
-            result.append(output)
-
-        return result
-
-    @staticmethod
-    def form_err(code: int, message: str, need_id: bool,
-                 msg_id: Optional[Union[int, str]] = None) -> Error:
-        """
-        Сформировать ошибку
-        """
-        return error({"code": code, "message": message}, need_id=need_id, msg_id=msg_id)
+            output = form_error(-32600, f'Неправильный формат запроса, {s_type(request)}')
+            errors.append(output)
 
     def check_dict(self, request: Request) -> Union[Request, Error]:
         """
-        Проверить словарь запроса
+        Проверить словарь запроса.
         """
-        version = request.get('jsonrpc')
         method = request.get('method')
         params = request.get('params')
         msg_id = request.get('id')
         need_id = 'id' in request
 
         if not request:
-            response = self.form_err(-32600, 'Получен пустой запрос.', True, None)
+            response = form_error(-32600, 'Получен пустой запрос.')
 
-        elif version != '2.0':
-            response = self.form_err(-32600, 'Поддерживается только JSON-RPC 2.0.', need_id, msg_id)
+        elif request.get('jsonrpc') != '2.0':
+            response = form_error(-32600, 'Поддерживается только JSON-RPC 2.0.', need_id, msg_id)
 
         elif method is None:
-            response = self.form_err(-32601, 'Не указан метод запроса.', need_id, msg_id)
+            response = form_error(-32601, 'Не указан метод запроса.', need_id, msg_id)
 
         elif method not in self._methods:
-            response = self.form_err(-32601, f'Неизвестный метод: "{method}".', need_id, msg_id)
+            response = form_error(-32601, f'Неизвестный метод: "{method}".', need_id, msg_id)
 
         elif params is None:
-            response = self.form_err(-32602, f'Не указаны аргументы вызова.', need_id, msg_id)
+            response = form_error(-32602, 'Не указаны аргументы вызова.', need_id, msg_id)
 
         elif isinstance(params, list):
-            response = self.form_err(-32602, f'Позиционные аргументы не поддерживаеются.',
-                                     need_id, msg_id)
+            response = form_error(
+                -32602, 'Позиционные аргументы не поддерживаются.', need_id, msg_id
+            )
 
         elif not isinstance(params, dict):
-            response = self.form_err(-32602, f'Неправильно оформлены аргументы вызова метода.',
-                                     need_id, msg_id)
+            response = form_error(
+                -32602, 'Неправильно оформлены аргументы вызова метода.', need_id, msg_id
+            )
 
         elif params.get('secret_key') is None:
-            response = self.form_err(-32602, f'Не предоставлен ключ авторизации.', need_id, msg_id)
+            response = form_error(-32602, 'Не предоставлен ключ авторизации.', need_id, msg_id)
 
-        else:
-            response = request
-
-        return response
-
-    def authorize(self, request: Request, check_func: Callable) -> Union[Request, Error]:
-        """
-        Проверить авторизацию внешней функцией
-        """
-        valid = check_func(request)
-
-        if not valid:
-            msg_id = request.get('id')
-            need_id = 'id' in request
-            response = self.form_err(-32602, f'Отказано в доступе.', need_id, msg_id)
         else:
             response = request
 
@@ -265,7 +197,7 @@ class JSONRPCMethodMaster:
 
     def execute(self, request: Request) -> Result:
         """
-        Исполнить запрос
+        Исполнить запрос.
         """
         method_name = request.get('method', 'unknown method')
         params = request.get('params', {})

@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 import pytest
 
 # модули проекта
-from trivial_tools.json_rpc.basic_tools import form_request
+from trivial_tools.json_rpc.basic_tools import form_request, authorize
 from trivial_tools.json_rpc.method_master import JSONRPCMethodMaster
 
 
@@ -72,21 +72,20 @@ def test_extract_json(master):
     """
     Должет вытащить JSON
     """
-    fake = MagicMock()
-    fake.get_json.return_value = 1
+    class Fake:
+        pass
+    fake = Fake()
+
+    fake.get_json = lambda: 1
     result = master.extract_json(fake)
     assert result == 1
 
-    class Fake:
-        pass
-
-    fake = Fake()
     fake.json = lambda: 2
     result = master.extract_json(fake)
     assert result == 2
 
     fake = MagicMock()
-    fake.get_json.side_effect = json.JSONDecodeError('', '', 0)
+    fake.json.side_effect = json.JSONDecodeError('', '', 0)
     result = master.extract_json(fake)
     assert result == {'error': {'code': -32600,
                                 'message': 'Неправильный формат запроса, JSONDecodeError: line 1 '
@@ -100,8 +99,10 @@ def test_check_signature(master):
     Должен проверить сигнатуры списка запросов или одного запроса
     """
     request = form_request(method='func_1')
-    result = master.check_signature(request)
-    assert result == [{
+    requests = []
+    errors = []
+    master.check_signature(request, requests, errors)
+    assert errors == [{
         'error': {
             'code': -32602,
             'message': 'Расхождение в аргументах метода: не хватает аргументов a, b'},
@@ -109,8 +110,10 @@ def test_check_signature(master):
         'jsonrpc': '2.0'}]
 
     request = form_request(method='func_1', a=1, z=2)
-    result = master.check_signature(request)
-    assert result == [
+    requests = []
+    errors = []
+    master.check_signature(request, requests, errors)
+    assert errors == [
         {'error': {
             'code': -32602,
             'message':
@@ -123,18 +126,25 @@ def test_check_signature(master):
         form_request(method='func_1', c=1, d=2),
         form_request(method='func_2', c=1, d=2),
     ]
-    result = master.check_signature(request)
-    assert result == [
+    requests = []
+    errors = []
+    master.check_signature(request, requests, errors)
+    assert requests == [
         {'id': None, 'jsonrpc': '2.0', 'method': 'func_1', 'params': {'a': 1, 'b': 2}},
+        {'id': None, 'jsonrpc': '2.0', 'method': 'func_2', 'params': {'c': 1, 'd': 2}}
+    ]
+    assert errors == [
         {'error': {'code': -32602,
                    'message': 'Расхождение в аргументах метода: не хватает аргументов '
                               'a, b, лишние аргументы c, d'},
          'id': None,
          'jsonrpc': '2.0'},
-        {'id': None, 'jsonrpc': '2.0', 'method': 'func_2', 'params': {'c': 1, 'd': 2}}]
+    ]
 
-    result = master.check_signature(None)
-    assert result == [
+    requests = []
+    errors = []
+    master.check_signature(None, requests, errors)
+    assert errors == [
         {'error': {'code': -32600, 'message': 'Неправильный формат запроса, NoneType'},
          'id': None,
          'jsonrpc': '2.0'}]
@@ -179,7 +189,7 @@ def test_check_dict(master):
     request = {'jsonrpc': '2.0', 'method': 'func_1', 'params': []}
     result = master.check_dict(request)
     assert result == {'error': {'code': -32602,
-                                'message': 'Позиционные аргументы не поддерживаеются.'},
+                                'message': 'Позиционные аргументы не поддерживаются.'},
                       'jsonrpc': '2.0'}
 
     request = {'jsonrpc': '2.0', 'method': 'func_1', 'params': {}}
@@ -203,21 +213,27 @@ def test_check_request(master):
     Должен проверить запрос
     """
     request = form_request(method='func_1', a=1, b=2, secret_key='xxx')
-    result = master.check_request(request)
-    assert result == [request]
+    requests = []
+    errors = []
+    master.check_request(request, requests, errors)
+    assert requests == [request]
 
-    result = master.check_request(None)
-    assert result == [
+    requests = []
+    errors = []
+    master.check_request(None, requests, errors)
+    assert errors == [
         {'error': {'code': -32600, 'message': 'Неправильный формат запроса, NoneType'},
          'id': None,
          'jsonrpc': '2.0'}]
 
+    requests = []
+    errors = []
     req_1 = form_request(method='func_1', a=1, b=2, secret_key='xxx')
     req_2 = form_request(method='func_1', a=1, z=2, secret_key='xxx')
     req_3 = form_request(method='func_2', c=1, d=2, secret_key='xxx')
     request = [req_1, req_2, req_3]
-    result = master.check_request(request)
-    assert result == request
+    master.check_request(request, requests, errors)
+    assert requests == request
 
 
 def test_authorize(master):
@@ -225,11 +241,11 @@ def test_authorize(master):
     Должен проверить авторизацию
     """
     request = form_request(method='func_1', a=1, b=2)
-    assert master.authorize(request, lambda x: False) == {
+    assert authorize(request, lambda x: False) == {
         'error': {'code': -32602, 'message': 'Отказано в доступе.'},
         'id': None,
         'jsonrpc': '2.0'}
-    assert master.authorize(request, lambda x: True) == request
+    assert authorize(request, lambda x: True) == request
 
 
 def test_execute(master):

@@ -25,7 +25,6 @@ def call_api(url: str, *, method: str, error_msg: str, debug: bool, **kwargs) ->
     """
     payload = form_request(
         method=method,
-        msg_id=kwargs.get('msg_id'),
         **kwargs
     )
 

@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 import pytest
 
 # модули проекта
-from json_rpc.basic_tools import form_request
+from trivial_tools.json_rpc.basic_tools import form_request
 from trivial_tools.json_rpc.method_master import JSONRPCMethodMaster
 
 

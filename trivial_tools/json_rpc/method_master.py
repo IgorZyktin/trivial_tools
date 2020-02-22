@@ -10,12 +10,12 @@
 import json
 from inspect import signature
 from types import FunctionType
-from typing import Optional, List, Callable, Dict, Sequence, Union
+from typing import Optional, List, Callable, Dict, Sequence, Union, Tuple, Coroutine
 
 # сторонние модули
 from trivial_tools.formatters.base import s_type
 from trivial_tools.json_rpc.basic_tools import (
-    Request, Error, form_error, GroupRequest, Result, decide,
+    Request, Error, form_error, GroupRequest, Result, decide, authorize,
 )
 
 
@@ -26,10 +26,11 @@ class JSONRPCMethodMaster:
     Используется для централизованного управления всеми методами приложения.
     """
 
-    def __init__(self, ignores: Sequence[str] = ('secret_key',)):
+    def __init__(self, auth_func: Callable, ignores: Sequence[str] = ('secret_key',)):
         """
         Инициация.
         """
+        self.auth_func = auth_func
         self._ignores = ['return'] + list(ignores)
         self._methods: Dict[str, Callable] = {}
 
@@ -65,7 +66,7 @@ class JSONRPCMethodMaster:
         return sorted(self._methods.keys())
 
     @staticmethod
-    def extract_json(request) -> Union[Request, Error]:
+    def extract_json(request) -> Tuple[Union[Request, Coroutine, None], Optional[Error]]:
         """
         Безопасное извлечение JSON из запроса.
         """
@@ -77,30 +78,42 @@ class JSONRPCMethodMaster:
                 # Flask
                 response = request.get_json()
 
+            error_response = None
         except json.JSONDecodeError as err:
-            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}')
+            response = None
+            error_response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}')
 
-        return response
+        return response, error_response
 
-    def check_signature(self, request: Union[Request, GroupRequest], requests: List[Request],
-                        errors: List[Error]) -> None:
+    def check_signature_conveyor(self, input_list: GroupRequest, requests: List[Request],
+                                 errors: List[Error]) -> None:
         """
         Проверка полученных параметров на соответствие сигнатуре метода.
         """
-        if isinstance(request, dict):
-            # одиночный запрос
-            output = self._check_signature(request)
+        while input_list:
+            new_request = input_list.pop()
+            output = self._check_signature(new_request)
             decide(output, requests, errors)
 
-        elif isinstance(request, list):
-            # групповой запрос
-            for sub_request in request:
-                output = self._check_signature(sub_request)
-                decide(output, requests, errors)
+    def check_request_conveyor(self, input_list: GroupRequest, requests: List[Request],
+                               errors: List[Error]) -> None:
+        """
+        Проверить на предмет соответствия JSON RPC 2.0.
+        """
+        while input_list:
+            new_request = input_list.pop()
+            output = self.check_dict(new_request)
+            decide(output, requests, errors)
 
-        else:
-            output = form_error(-32600, f'Неправильный формат запроса, {s_type(request)}')
-            errors.append(output)
+    def check_auth_conveyor(self, input_list: GroupRequest, requests: List[Request],
+                            errors: List[Error]) -> None:
+        """
+        Проверить авторизацию внешней функцией.
+        """
+        while input_list:
+            new_request = input_list.pop()
+            output = authorize(new_request, self.auth_func)
+            decide(output, requests, errors)
 
     def _check_signature(self, request: Request) -> Union[Request, Error]:
         """
@@ -135,23 +148,6 @@ class JSONRPCMethodMaster:
 
             return form_error(-32602, message, need_id, msg_id)
         return request
-
-    def check_request(self, request: Union[Request, GroupRequest], requests: List[Request],
-                      errors: List[Error]) -> None:
-        """
-        Проверить на предмет соответствия JSON RPC 2.0.
-        """
-        if isinstance(request, dict):
-            output = self.check_dict(request)
-            decide(output, requests, errors)
-
-        elif isinstance(request, list):
-            for sub_body in request:
-                output = self.check_dict(sub_body)
-                decide(output, requests, errors)
-        else:
-            output = form_error(-32600, f'Неправильный формат запроса, {s_type(request)}')
-            errors.append(output)
 
     def check_dict(self, request: Request) -> Union[Request, Error]:
         """

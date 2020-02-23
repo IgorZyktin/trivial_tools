@@ -48,7 +48,6 @@ class Error(TypedDict):
     id: MSG_ID
 
 
-GroupRequest = List[Request]
 Response = Union[Result, Error]
 
 
@@ -62,6 +61,9 @@ def form_request(*, method: str, msg_id: MSG_ID = None, **kwargs) -> Request:
     elif 'id' in kwargs:
         msg_id = kwargs.pop('id')
         return {'jsonrpc': '2.0', 'method': method, 'params': {**kwargs}, 'id': msg_id}
+
+    elif msg_id is None and 'id' not in kwargs:
+        return {'jsonrpc': '2.0', 'method': method, 'params': {**kwargs}}
 
     return {'jsonrpc': '2.0', 'method': method, 'params': {**kwargs}, 'id': msg_id}
 

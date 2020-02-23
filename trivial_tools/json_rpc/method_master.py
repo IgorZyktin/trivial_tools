@@ -8,6 +8,7 @@
 """
 # встроенные модули
 import json
+from functools import partial
 from inspect import signature
 from types import FunctionType
 from typing import Optional, List, Callable, Dict, Sequence, Union, Tuple, Coroutine
@@ -15,7 +16,7 @@ from typing import Optional, List, Callable, Dict, Sequence, Union, Tuple, Corou
 # сторонние модули
 from trivial_tools.formatters.base import s_type
 from trivial_tools.json_rpc.basic_tools import (
-    Request, Error, form_error, GroupRequest, Result, decide, authorize,
+    Request, Error, form_error, Result, decide, authorize,
 )
 
 
@@ -40,7 +41,7 @@ class JSONRPCMethodMaster:
         """
         return method_name in self._methods
 
-    def register_method(self, func: FunctionType) -> FunctionType:
+    def register_method(self, func: Union[FunctionType, Coroutine]) -> FunctionType:
         """
         Зарегистрировать метод.
         """
@@ -66,54 +67,72 @@ class JSONRPCMethodMaster:
         return sorted(self._methods.keys())
 
     @staticmethod
-    def extract_json(request) -> Tuple[Union[Request, Coroutine, None], Optional[Error]]:
+    def extract_attribute(request, how: str) -> Union[dict, Coroutine]:
         """
-        Безопасное извлечение JSON из запроса.
+        Извлечь JSON из тела запроса
+        """
+        if how.endswith('()'):
+            response = getattr(request, how.rstrip('()'))()
+        else:
+            response = getattr(request, how.rstrip('()'))
+        return response
+
+    async def async_json(self, request, how: str = 'json()') -> Tuple[Union[Request, Error], bool]:
+        """
+        Безопасное извлечение JSON из запроса. Асинхронная форма.
         """
         try:
-            try:
-                # Starlette, Requests
-                response = request.json()
-            except AttributeError:
-                # Flask
-                response = request.get_json()
-
-            error_response = None
+            response = await self.extract_attribute(request, how)
+            is_fail = False
         except json.JSONDecodeError as err:
-            response = None
-            error_response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}')
+            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}')
+            is_fail = True
 
-        return response, error_response
+        return response, is_fail
 
-    def check_signature_conveyor(self, input_list: GroupRequest, requests: List[Request],
-                                 errors: List[Error]) -> None:
+    def json(self, request, how: str = 'json') -> Tuple[Union[Request, Error], bool]:
         """
-        Проверка полученных параметров на соответствие сигнатуре метода.
+        Безопасное извлечение JSON из запроса. Синхронная форма.
         """
-        while input_list:
-            new_request = input_list.pop()
-            output = self._check_signature(new_request)
-            decide(output, requests, errors)
+        try:
+            response = self.extract_attribute(request, how)
+            is_fail = False
+        except json.JSONDecodeError as err:
+            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}')
+            is_fail = True
 
-    def check_request_conveyor(self, input_list: GroupRequest, requests: List[Request],
-                               errors: List[Error]) -> None:
+        return response, is_fail
+
+    @staticmethod
+    def base_conveyor(requests: List[Request], errors: List[Error], func: Callable) -> None:
+        """
+        Базовая функция сортировки запросов.
+        """
+        filtered = []
+        while requests:
+            new_request = requests.pop()
+            output = func(new_request)
+            decide(output, filtered, errors)
+
+        requests.extend(reversed(filtered))
+
+    def check_request_conveyor(self, requests: List[Request], errors: List[Error]) -> None:
         """
         Проверить на предмет соответствия JSON RPC 2.0.
         """
-        while input_list:
-            new_request = input_list.pop()
-            output = self.check_dict(new_request)
-            decide(output, requests, errors)
+        self.base_conveyor(requests, errors, func=self.check_dict)
 
-    def check_auth_conveyor(self, input_list: GroupRequest, requests: List[Request],
-                            errors: List[Error]) -> None:
+    def check_signature_conveyor(self, requests: List[Request], errors: List[Error]) -> None:
+        """
+        Проверка полученных параметров на соответствие сигнатуре метода.
+        """
+        self.base_conveyor(requests, errors, func=self._check_signature)
+
+    def check_auth_conveyor(self, requests: List[Request], errors: List[Error]) -> None:
         """
         Проверить авторизацию внешней функцией.
         """
-        while input_list:
-            new_request = input_list.pop()
-            output = authorize(new_request, self.auth_func)
-            decide(output, requests, errors)
+        self.base_conveyor(requests, errors, func=partial(authorize, check_func=self.auth_func))
 
     def _check_signature(self, request: Request) -> Union[Request, Error]:
         """
@@ -153,6 +172,9 @@ class JSONRPCMethodMaster:
         """
         Проверить словарь запроса.
         """
+        if not isinstance(request, dict):
+            return form_error(-32600, f'Неправильный формат запроса, {s_type(request)}.')
+
         method = request.get('method')
         params = request.get('params')
         msg_id = request.get('id')
@@ -204,6 +226,23 @@ class JSONRPCMethodMaster:
 
         # @@@@@@@@@@@@@@@@@@@@@@@@
         response = method(**params)
+        # @@@@@@@@@@@@@@@@@@@@@@@@
+
+        return response
+
+    async def async_execute(self, request: Request) -> Result:
+        """
+        Исполнить запрос.
+        """
+        method_name = request.get('method', 'unknown method')
+        params = request.get('params', {})
+        method = self.get_method(method_name)
+
+        # секретный ключ не нужен внутри методов
+        params.pop('secret_key', None)
+
+        # @@@@@@@@@@@@@@@@@@@@@@@@
+        response = await method(**params)
         # @@@@@@@@@@@@@@@@@@@@@@@@
 
         return response

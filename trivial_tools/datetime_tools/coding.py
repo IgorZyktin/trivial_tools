@@ -10,6 +10,10 @@ from typing import Tuple
 # модули проекта общие
 from trivial_tools.special.special import fail
 
+__all__ = [
+    'encode_period',
+    'decode_period'
+]
 
 LETTERS = 'A B C D E F G H J K L M N P Q R S T U V W X Y Z'.split()
 

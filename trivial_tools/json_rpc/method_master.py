@@ -139,16 +139,25 @@ class JSONRPCMethodMaster:
         Проверка полученных параметров на соответствие сигнатуре метода.
         """
         method_name = request.get('method')
-        parameters = request.get('params').keys()
+        params = request.get('params')
         msg_id = request.get('id')
         need_id = 'id' in request
 
-        method: FunctionType = self._methods[method_name]
+        if isinstance(params, list):
+            # мы не можем проверить аргументы, если они переданы по порядку
+            return request
 
+        params = params.keys()
+
+        method: FunctionType = self._methods[method_name]
         sig = signature(method)
 
+        if 'kwargs' in sig.parameters:
+            # мы не можем проверить аргументы, если функция принимает их в запакованном виде
+            return request
+
         valid_keys = {x for x in sig.parameters if x not in self._ignores}
-        other_keys = {x for x in parameters if x not in self._ignores}
+        other_keys = {x for x in params if x not in self._ignores}
 
         message = 'Расхождение в аргументах метода: '
 
@@ -195,17 +204,12 @@ class JSONRPCMethodMaster:
         elif params is None:
             response = form_error(-32602, 'Не указаны аргументы вызова.', need_id, msg_id)
 
-        elif isinstance(params, list):
-            response = form_error(
-                -32602, 'Позиционные аргументы не поддерживаются.', need_id, msg_id
-            )
-
-        elif not isinstance(params, dict):
+        elif not isinstance(params, (dict, list)):
             response = form_error(
                 -32602, 'Неправильно оформлены аргументы вызова метода.', need_id, msg_id
             )
 
-        elif params.get('secret_key') is None:
+        elif isinstance(params, dict) and params.get('secret_key') is None:
             response = form_error(-32602, 'Не предоставлен ключ авторизации.', need_id, msg_id)
 
         else:
@@ -221,11 +225,13 @@ class JSONRPCMethodMaster:
         params = request.get('params', {})
         method = self.get_method(method_name)
 
-        # секретный ключ не нужен внутри методов
-        params.pop('secret_key', None)
-
         # @@@@@@@@@@@@@@@@@@@@@@@@
-        response = method(**params)
+        if isinstance(params, dict):
+            # секретный ключ не нужен внутри методов
+            params.pop('secret_key', None)
+            response = method(**params)
+        else:
+            response = method(*params)
         # @@@@@@@@@@@@@@@@@@@@@@@@
 
         return response
@@ -238,11 +244,13 @@ class JSONRPCMethodMaster:
         params = request.get('params', {})
         method = self.get_method(method_name)
 
-        # секретный ключ не нужен внутри методов
-        params.pop('secret_key', None)
-
         # @@@@@@@@@@@@@@@@@@@@@@@@
-        response = await method(**params)
+        if isinstance(params, dict):
+            # секретный ключ не нужен внутри методов
+            params.pop('secret_key', None)
+            response = await method(**params)
+        else:
+            response = await method(*params)
         # @@@@@@@@@@@@@@@@@@@@@@@@
 
         return response

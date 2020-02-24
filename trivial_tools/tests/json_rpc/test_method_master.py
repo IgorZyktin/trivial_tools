@@ -13,8 +13,8 @@ from unittest.mock import MagicMock
 import pytest
 
 # модули проекта
-from trivial_tools.json_rpc.basic_tools import form_request, authorize
 from trivial_tools.json_rpc.method_master import JSONRPCMethodMaster
+from trivial_tools.json_rpc.basic_tools import form_request, authorize
 
 
 def func_1(a, b):
@@ -210,12 +210,6 @@ def test_check_dict(master):
     request = {'jsonrpc': '2.0', 'method': 'func_1'}
     result = master.check_dict(request)
     assert result == {'error': {'code': -32602, 'message': 'Не указаны аргументы вызова.'},
-                      'jsonrpc': '2.0'}
-
-    request = {'jsonrpc': '2.0', 'method': 'func_1', 'params': []}
-    result = master.check_dict(request)
-    assert result == {'error': {'code': -32602,
-                                'message': 'Позиционные аргументы не поддерживаются.'},
                       'jsonrpc': '2.0'}
 
     request = {'jsonrpc': '2.0', 'method': 'func_1', 'params': {}}

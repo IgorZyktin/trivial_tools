@@ -9,7 +9,7 @@ from datetime import timedelta
 
 # модули проекта
 from trivial_tools.datetime_tools.passed_time import (
-    form_minutes, form_weeks, form_days, form_seconds, form_hours, passed_time, passed_times_short
+    form_minutes, form_weeks, form_days, form_seconds, form_hours, passed_time, passed_time_short
 )
 
 
@@ -146,19 +146,19 @@ def test_short():
     Проверка укороченной версии
     """
     delta = timedelta(seconds=0)
-    assert passed_times_short(delta) == '0с'
+    assert passed_time_short(delta) == '0с'
 
     delta = timedelta(weeks=4, days=6, hours=22, minutes=47, seconds=17)
-    assert passed_times_short(delta) == '4н 6д 22ч 47м 17с'
+    assert passed_time_short(delta) == '4н 6д 22ч 47м 17с'
 
     delta = timedelta(seconds=3601)
-    assert passed_times_short(delta) == '1ч 1с'
+    assert passed_time_short(delta) == '1ч 1с'
 
     delta = timedelta(days=33)
-    assert passed_times_short(delta) == '4н 5д'
+    assert passed_time_short(delta) == '4н 5д'
 
     delta = timedelta(seconds=53601)
-    assert passed_times_short(delta) == '14ч 53м 21с'
+    assert passed_time_short(delta) == '14ч 53м 21с'
 
     delta = timedelta(hours=25, seconds=86)
-    assert passed_times_short(delta) == '1д 1ч 1м 26с'
+    assert passed_time_short(delta) == '1д 1ч 1м 26с'

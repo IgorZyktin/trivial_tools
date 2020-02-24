@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 
     Форматирование прошедшего времени в виде удобной строки
@@ -10,6 +11,12 @@ from typing import Tuple, Optional
 
 # модули проекта
 from trivial_tools.datetime_tools.basic import cast_seconds_to_timedelta
+
+
+__all__ = [
+    'passed_time',
+    'passed_time_short'
+]
 
 
 def passed_time(delta: timedelta) -> str:
@@ -25,7 +32,7 @@ def passed_time(delta: timedelta) -> str:
     return result
 
 
-def passed_times_short(delta: timedelta) -> str:
+def passed_time_short(delta: timedelta) -> str:
     """
     Трансформировать timedelta в описание времени в форме '6д 4ч 35м'
     """

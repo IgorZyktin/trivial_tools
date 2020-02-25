@@ -204,7 +204,7 @@ def init_daemon(config, handler: Callable, infinite: bool = False) -> None:
                     url=config.API_URL,
                     method='register_report',
                     report=payload,
-                    fingerprint=config._FINGERPRINT,
+                    fingerprint=config._SECRET_KEY,
                     error_msg=f'Не удалось отправить отчёт о состоянии на {config.API_URL}!',
                     debug=config.in_debug()
                 )

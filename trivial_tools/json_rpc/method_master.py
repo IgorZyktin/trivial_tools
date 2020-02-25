@@ -85,7 +85,7 @@ class JSONRPCMethodMaster:
             response = await self.extract_attribute(request, how)
             is_fail = False
         except json.JSONDecodeError as err:
-            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}')
+            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}.')
             is_fail = True
 
         return response, is_fail
@@ -98,7 +98,7 @@ class JSONRPCMethodMaster:
             response = self.extract_attribute(request, how)
             is_fail = False
         except json.JSONDecodeError as err:
-            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}')
+            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}.')
             is_fail = True
 
         return response, is_fail

@@ -115,3 +115,24 @@ def decide(request: Union[Request, Error], requests: List[Request], errors: List
         errors.append(request)
     else:
         requests.append(request)
+
+
+def form_message(request, client, headers, output) -> str:
+    """
+    Сформировать сообщение об ошибке
+    """
+    top = '\n//' + '~' * 80 + r'\\' + '\n'
+    bot = '\n' + r'\\' + '~' * 80 + '//\n'
+
+    headers = '\n'.join(f'\t\t>> {key} = {value}' for key, value in headers.items())
+
+    message = (
+            top +
+            f' Тело запроса: {request}\n'
+            f'       Клиент: {client}\n'
+            f'    Заголовки: \n'
+            f'{headers}\n'
+            f'\tОтвет: {output}'
+            + bot
+    )
+    return message

@@ -99,9 +99,9 @@ def _execute(config, handler: Callable, separator: str, given_logger) -> str:
 def init_daemon(config,
                 given_logger,
                 handler: Callable,
-                complete_callback: Callable,
-                post_mortem_callback: Callable,
-                infinite: bool = False) -> None:
+                complete_callback: Optional[Callable] = None,
+                post_mortem_callback: Optional[Callable] = None,
+                infinite: bool = False) -> str:
     """Стартовать скрипт с выбранными настройками.
 
     :param given_logger: сущность для логгирования вызовов
@@ -111,6 +111,7 @@ def init_daemon(config,
     :param handler: рабочая функция скрпта, которая будет выполнять всю полезную работу
     :param infinite: флаг бесконечного перезапуска скрипта при выбросе исключения
     """
+    message = ''
     separator = '#' * 79
 
     while True:
@@ -134,11 +135,18 @@ def init_daemon(config,
             break
 
         except Exception as err:
-            post_mortem_callback(err)
+            if post_mortem_callback is not None:
+                duration = int((datetime.now() - time_start).total_seconds())
+                post_mortem_callback(config, err, time_start, duration)
 
         if not infinite:
             break
 
     duration = int((datetime.now() - time_start).total_seconds())
-    complete_callback(duration, normal_stop)
+
+    if complete_callback is not None:
+        complete_callback(message, duration, normal_stop)
+
     given_logger.warning(separator)
+
+    return message

@@ -260,7 +260,7 @@ class JSONRPCMethodMaster:
             requests = request
 
         else:
-            response = form_error(*invalid_format(f'{s_type(request)}.'))
+            response = form_error(*invalid_format(f'{s_type(request)}'))
             return response
 
         errors = []

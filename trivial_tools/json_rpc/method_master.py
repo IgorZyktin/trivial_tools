@@ -282,7 +282,7 @@ class JSONRPCMethodMaster:
 
                 # noinspection PyBroadException
                 try:
-                    method_result = self.async_execute(job)
+                    method_result = await self.async_execute(job)
 
                     if need_id:
                         results.append(result(method_result, msg_id=msg_id))

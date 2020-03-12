@@ -75,64 +75,6 @@ def test_get_method_names(master):
     assert master.get_method_names() == ['func_1', 'func_2', 'func_3']
 
 
-def test_json(master):
-    """
-    Должет вытащить JSON
-    """
-
-    class Fake:
-        pass
-
-    fake = Fake()
-
-    fake.json = lambda: 1
-    result = master.json(fake, how='json()')
-    assert result == (1, False)
-
-    fake.json = 2
-    result = master.json(fake, how='json')
-    assert result == (2, False)
-
-    fake = MagicMock()
-    fake.json.side_effect = json.JSONDecodeError('', '', 0)
-    result = master.json(fake, how='json()')
-    assert result == ({'error': {'code': -32600,
-                                 'message': 'Неправильный формат запроса, JSONDecodeError: line 1 '
-                                            'column 1 (char 0)'},
-                       'id': None,
-                       'jsonrpc': '2.0'}, True)
-
-
-def test_async_json(master):
-    """
-    Должет вытащить JSON
-    """
-    class Fake:
-        @staticmethod
-        async def json():
-            return 1
-
-        @property
-        async def get_json(self):
-            return 2
-
-    fake = Fake()
-    result = asyncio.run(master.async_json(fake, how='json()'))
-    assert result == (1, False)
-
-    result = asyncio.run(master.async_json(fake, how='get_json'))
-    assert result == (2, False)
-
-    fake = MagicMock()
-    fake.json.side_effect = json.JSONDecodeError('', '', 0)
-    result = asyncio.run(master.async_json(fake, how='json()'))
-    assert result == ({'error': {'code': -32600,
-                                 'message': 'Неправильный формат запроса, JSONDecodeError: line 1 '
-                                            'column 1 (char 0)'},
-                       'id': None,
-                       'jsonrpc': '2.0'}, True)
-
-
 def test_check_signature(master):
     """
     Должен проверить сигнатуры списка запросов или одного запроса
@@ -183,43 +125,43 @@ def test_check_dict(master):
     requests = [form_request(method='func_1', a=1, b=2)]
     errors = []
     master.check_request_conveyor(requests, errors)
-    assert errors == [{'error': {'code': -32602, 'message': 'Не предоставлен ключ авторизации.'},
+    assert errors == [{'error': {'code': -32607, 'message': 'Не предоставлен ключ авторизации.'},
                        'jsonrpc': '2.0'}]
 
     request = {}
     result = master.check_dict(request)
-    assert result == {'error': {'code': -32600, 'message': 'Получен пустой запрос.'},
+    assert result == {'error': {'code': -32601, 'message': 'Получен пустой запрос.'},
                       'id': None,
                       'jsonrpc': '2.0'}
 
     request = {'jsonrpc': '1.2'}
     result = master.check_dict(request)
-    assert result == {'error': {'code': -32600, 'message': 'Поддерживается только JSON-RPC 2.0.'},
+    assert result == {'error': {'code': -32602, 'message': 'Поддерживается только JSON-RPC 2.0.'},
                       'jsonrpc': '2.0'}
 
     request = {'jsonrpc': '2.0'}
     result = master.check_dict(request)
-    assert result == {'error': {'code': -32601, 'message': 'Не указан метод запроса.'},
+    assert result == {'error': {'code': -32603, 'message': 'Не указан метод запроса.'},
                       'jsonrpc': '2.0'}
 
     request = {'jsonrpc': '2.0', 'method': 'zo'}
     result = master.check_dict(request)
-    assert result == {'error': {'code': -32601, 'message': 'Неизвестный метод: "zo".'},
+    assert result == {'error': {'code': -32604, 'message': 'Неизвестный метод: "zo".'},
                       'jsonrpc': '2.0'}
 
     request = {'jsonrpc': '2.0', 'method': 'func_1'}
     result = master.check_dict(request)
-    assert result == {'error': {'code': -32602, 'message': 'Не указаны аргументы вызова.'},
+    assert result == {'error': {'code': -32605, 'message': 'Не указаны аргументы вызова.'},
                       'jsonrpc': '2.0'}
 
     request = {'jsonrpc': '2.0', 'method': 'func_1', 'params': {}}
     result = master.check_dict(request)
-    assert result == {'error': {'code': -32602, 'message': 'Не предоставлен ключ авторизации.'},
+    assert result == {'error': {'code': -32607, 'message': 'Не предоставлен ключ авторизации.'},
                       'jsonrpc': '2.0'}
 
     request = {'jsonrpc': '2.0', 'method': 'func_1', 'params': False}
     result = master.check_dict(request)
-    assert result == {'error': {'code': -32602,
+    assert result == {'error': {'code': -32606,
                                 'message': 'Неправильно оформлены аргументы вызова метода.'},
                       'jsonrpc': '2.0'}
 
@@ -242,7 +184,7 @@ def test_check_request(master):
     errors = []
     master.check_request_conveyor(requests, errors)
     assert errors == [
-        {'error': {'code': -32600, 'message': 'Неправильный формат запроса, NoneType.'},
+        {'error': {'code': -32600, 'message': 'Неправильный формат запроса: NoneType.'},
          'id': None,
          'jsonrpc': '2.0'}]
 

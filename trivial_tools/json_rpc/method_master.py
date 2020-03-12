@@ -7,16 +7,19 @@
 
 """
 # встроенные модули
-import json
 from functools import partial
 from inspect import signature
 from types import FunctionType
-from typing import Optional, List, Callable, Dict, Sequence, Union, Tuple, Coroutine
+from typing import Optional, List, Callable, Dict, Sequence, Union, Coroutine
 
-# сторонние модули
+# модули проекта
+from trivial_tools.json_rpc.errors import (
+    invalid_format, empty_request, invalid_version, no_method,
+    unknown_method, no_arguments, wrong_arguments_type, no_secret_key,
+    internal_error, not_found)
 from trivial_tools.formatters.base import s_type
 from trivial_tools.json_rpc.basic_tools import (
-    Request, Error, form_error, Result, decide, authorize,
+    Request, Error, form_error, Result, decide, authorize, result
 )
 
 
@@ -27,11 +30,19 @@ class JSONRPCMethodMaster:
     Используется для централизованного управления всеми методами приложения.
     """
 
-    def __init__(self, auth_func: Callable, ignores: Sequence[str] = ('secret_key',)):
+    def __init__(
+            self,
+            config,
+            auth_callback: Optional[Callable] = None,
+            post_mortem_callback: Optional[Callable] = None,
+            ignores: Sequence[str] = ('secret_key',),
+    ):
         """
         Инициация.
         """
-        self.auth_func = auth_func
+        self.config = config
+        self.auth_callback = auth_callback
+        self.post_mortem_callback = post_mortem_callback
         self._ignores = ['return'] + list(ignores)
         self._methods: Dict[str, Callable] = {}
 
@@ -67,43 +78,6 @@ class JSONRPCMethodMaster:
         return sorted(self._methods.keys())
 
     @staticmethod
-    def extract_attribute(request, how: str) -> Union[dict, Coroutine]:
-        """
-        Извлечь JSON из тела запроса
-        """
-        if how.endswith('()'):
-            response = getattr(request, how.rstrip('()'))()
-        else:
-            response = getattr(request, how.rstrip('()'))
-        return response
-
-    async def async_json(self, request, how: str = 'json()') -> Tuple[Union[Request, Error], bool]:
-        """
-        Безопасное извлечение JSON из запроса. Асинхронная форма.
-        """
-        try:
-            response = await self.extract_attribute(request, how)
-            is_fail = False
-        except json.JSONDecodeError as err:
-            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}.')
-            is_fail = True
-
-        return response, is_fail
-
-    def json(self, request, how: str = 'json') -> Tuple[Union[Request, Error], bool]:
-        """
-        Безопасное извлечение JSON из запроса. Синхронная форма.
-        """
-        try:
-            response = self.extract_attribute(request, how)
-            is_fail = False
-        except json.JSONDecodeError as err:
-            response = form_error(-32600, f'Неправильный формат запроса, {s_type(err)}{err}.')
-            is_fail = True
-
-        return response, is_fail
-
-    @staticmethod
     def base_conveyor(requests: List[Request], errors: List[Error], func: Callable) -> None:
         """
         Базовая функция сортировки запросов.
@@ -130,9 +104,14 @@ class JSONRPCMethodMaster:
 
     def check_auth_conveyor(self, requests: List[Request], errors: List[Error]) -> None:
         """
-        Проверить авторизацию внешней функцией.
+        Проверить авторизацию внешней функцией (если есть).
         """
-        self.base_conveyor(requests, errors, func=partial(authorize, check_func=self.auth_func))
+        if self.auth_callback is None:
+            self.base_conveyor(requests, errors,
+                               func=lambda x: x)
+        else:
+            self.base_conveyor(requests, errors,
+                               func=partial(authorize, check_func=self.auth_callback))
 
     def _check_signature(self, request: Request) -> Union[Request, Error]:
         """
@@ -182,7 +161,7 @@ class JSONRPCMethodMaster:
         Проверить словарь запроса.
         """
         if not isinstance(request, dict):
-            return form_error(-32600, f'Неправильный формат запроса, {s_type(request)}.')
+            return form_error(*invalid_format(s_type(request)))
 
         method = request.get('method')
         params = request.get('params')
@@ -190,27 +169,25 @@ class JSONRPCMethodMaster:
         need_id = 'id' in request
 
         if not request:
-            response = form_error(-32600, 'Получен пустой запрос.')
+            response = form_error(*empty_request())
 
         elif request.get('jsonrpc') != '2.0':
-            response = form_error(-32600, 'Поддерживается только JSON-RPC 2.0.', need_id, msg_id)
+            response = form_error(*invalid_version(), need_id, msg_id)
 
         elif method is None:
-            response = form_error(-32601, 'Не указан метод запроса.', need_id, msg_id)
+            response = form_error(*no_method(), need_id, msg_id)
 
         elif method not in self._methods:
-            response = form_error(-32601, f'Неизвестный метод: "{method}".', need_id, msg_id)
+            response = form_error(*unknown_method(str(method)), need_id, msg_id)
 
         elif params is None:
-            response = form_error(-32602, 'Не указаны аргументы вызова.', need_id, msg_id)
+            response = form_error(*no_arguments(), need_id, msg_id)
 
         elif not isinstance(params, (dict, list)):
-            response = form_error(
-                -32602, 'Неправильно оформлены аргументы вызова метода.', need_id, msg_id
-            )
+            response = form_error(*wrong_arguments_type(), need_id, msg_id)
 
         elif isinstance(params, dict) and params.get('secret_key') is None:
-            response = form_error(-32602, 'Не предоставлен ключ авторизации.', need_id, msg_id)
+            response = form_error(*no_secret_key(), need_id, msg_id)
 
         else:
             response = request
@@ -225,14 +202,15 @@ class JSONRPCMethodMaster:
         params = request.get('params', {})
         method = self.get_method(method_name)
 
-        # @@@@@@@@@@@@@@@@@@@@@@@@
+        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         if isinstance(params, dict):
-            # секретный ключ не нужен внутри методов
-            params.pop('secret_key', None)
+            # убираем игнорируемые параметры
+            for argument in self._ignores:
+                params.pop(argument, None)
             response = method(**params)
         else:
             response = method(*params)
-        # @@@@@@@@@@@@@@@@@@@@@@@@
+        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
         return response
 
@@ -244,13 +222,83 @@ class JSONRPCMethodMaster:
         params = request.get('params', {})
         method = self.get_method(method_name)
 
-        # @@@@@@@@@@@@@@@@@@@@@@@@
+        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         if isinstance(params, dict):
-            # секретный ключ не нужен внутри методов
-            params.pop('secret_key', None)
+            # убираем игнорируемые параметры
+            for argument in self._ignores:
+                params.pop(argument, None)
             response = await method(**params)
         else:
             response = await method(*params)
-        # @@@@@@@@@@@@@@@@@@@@@@@@
+        # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
         return response
+
+    async def render_get(self):
+        """
+        Приветствие для пользователя
+        """
+        methods = ''.join([f'<li>{x}</li>' for x in sorted(self.get_method_names())])
+
+        html = (
+            f"<html><head><title>{self.config.SERVICE_NAME}</title></head>"
+            f"<body><strong>{self.config.SERVICE_NAME}</strong><br>POST methods:<ul>"
+            f"{methods}"
+            "</ul></body></html>"
+        )
+
+        return html
+
+    async def render_post(self, request: Union[list, dict]) -> Union[Result, Error]:
+        """
+        Обработка запроса
+        """
+        if isinstance(request, dict):
+            requests = [request]
+
+        elif isinstance(request, list):
+            requests = request
+
+        else:
+            response = form_error(*invalid_format(f'{s_type(request)}.'))
+            return response
+
+        errors = []
+        results = []
+
+        try:
+            self.check_request_conveyor(requests, errors)
+            self.check_signature_conveyor(requests, errors)
+            self.check_auth_conveyor(requests, errors)
+
+        except Exception as err:
+            self.post_mortem_callback(err)
+            errors.append(form_error(*internal_error()))
+
+        else:
+            for job in requests:
+                need_id = 'id' in job
+                msg_id = job.get('id')
+
+                # noinspection PyBroadException
+                try:
+                    method_result = self.async_execute(job)
+
+                    if need_id:
+                        results.append(result(method_result, msg_id=msg_id))
+                    else:
+                        # мы не отвечаем на нотификации без id
+                        pass
+
+                except FileNotFoundError:
+                    errors.append(form_error(*not_found(), need_id=need_id, msg_id=msg_id))
+
+                except Exception as err:
+                    self.post_mortem_callback(err)
+                    errors.append(form_error(*internal_error(), need_id=need_id, msg_id=msg_id))
+
+        output = results + errors
+        if len(output) == 1:
+            output = output[0]
+
+        return output

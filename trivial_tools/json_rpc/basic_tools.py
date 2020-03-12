@@ -8,6 +8,9 @@
 # встроенные модули
 from typing import Dict, Any, Union, Optional, TypedDict, Literal, List, Callable
 
+# модули проекта
+from trivial_tools.json_rpc.errors import access_denied
+
 LIKE_JSON = Dict[str, Union[int, str, float, bool, None, list, dict]]
 MSG_ID = Optional[Union[str, int, None]]
 
@@ -104,7 +107,7 @@ def authorize(request: Request, check_func: Callable) -> Union[Request, Error]:
 
     msg_id = request.get('id')
     need_id = 'id' in request
-    return form_error(-32602, 'Отказано в доступе.', need_id, msg_id)
+    return form_error(*access_denied(), need_id, msg_id)
 
 
 def decide(request: Union[Request, Error], requests: List[Request], errors: List[Error]) -> None:
